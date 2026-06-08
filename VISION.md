@@ -39,7 +39,6 @@ Canonical security policy and reporting:
 
 - [`SECURITY.md`](SECURITY.md)
 
-
 Attribution responses can involve device and campaign information. Do not log,
 store, or transmit attribution data beyond the sample's explicit purpose.
 
