@@ -1,5 +1,8 @@
 # ios-appstore-search-attribution
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/ios-appstore-search-attribution` is an Apple platform application or Swift sample. iOS Appstore Search Attribution Sample App
@@ -71,4 +74,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > ios-appstore-search-attribution <!-- README-OVERVIEW-IMAGE --> iOS App Store Search Attribution https://iadsdk.apple.com/adserver/2.2/attribution A POST request payload of the data type “application/octet-stream” is sent to the endpoint "https://iadsdk.apple.com/adserver/2.2/attribution" and returns a protocol for app store search attribution. The following project shows how to perform this request with ADClient.
-
