@@ -44,3 +44,6 @@ store, or transmit attribution data beyond the sample's explicit purpose.
 - Private campaign or account data
 - Broad project migration bundled with attribution behavior changes
 - Generated signing material
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
