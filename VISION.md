@@ -38,7 +38,7 @@ Contribution rules:
 Attribution responses can involve device and campaign information. Do not log,
 store, or transmit attribution data beyond the sample's explicit purpose.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Collection of attribution data without privacy notes
 - Private campaign or account data
