@@ -48,7 +48,7 @@ The setup commands above validate the static baseline. Full attribution behavior
 ## Running or Using the Project
 
 - Open `ios-search-ads-sample.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
-- The sample uses `ADClient` to request Search Ads attribution data and keeps the response local-only.
+- Tap the attribution button in the sample app to request Search Ads attribution data through `ADClient`; the response stays local-only.
 - Do not log, store, upload, or add segment behavior for attribution responses without a dedicated privacy design and user consent.
 
 ## Testing and Verification
@@ -59,7 +59,7 @@ Run the local static baseline:
 make check
 ```
 
-The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the ADClient request flow, and guards against attribution logging, storage, network upload, or segment updates.
+The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the user-triggered ADClient request flow, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 
 For full legacy verification on macOS, use Xcode's test action or `xcodebuild test` with the appropriate scheme and destination.
 
@@ -73,7 +73,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include ios-search-ads-sample/Info.plist.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include ios-search-ads-sample/Info.plist.
-- Attribution responses can contain sensitive device and campaign context. Keep attribution response handling local-only and documented.
+- Attribution responses can contain sensitive device and campaign context. Keep attribution response handling local-only, user-triggered, and documented.
 
 ## Maintenance Notes
 

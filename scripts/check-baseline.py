@@ -8,7 +8,8 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PLAN = ROOT / "docs/plans/2026-06-08-attribution-baseline.md"
+BASELINE_PLAN = ROOT / "docs/plans/2026-06-08-attribution-baseline.md"
+EXPLICIT_REQUEST_PLAN = ROOT / "docs/plans/2026-06-08-explicit-attribution-request.md"
 
 
 def require(condition, message, failures):
@@ -22,6 +23,27 @@ def read(relative_path):
 
 def strip_swift_line_comments(text):
     return "\n".join(line.split("//", 1)[0] for line in text.splitlines())
+
+
+def swift_function_body(text, signature):
+    start = text.find(signature)
+    if start == -1:
+        return ""
+
+    body_start = text.find("{", start)
+    if body_start == -1:
+        return ""
+
+    depth = 0
+    for index in range(body_start, len(text)):
+        character = text[index]
+        if character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                return text[body_start + 1:index]
+    return ""
 
 
 def parse_xml(relative_path, failures):
@@ -58,6 +80,7 @@ def main():
         "ios-search-ads-sample/Base.lproj/LaunchScreen.storyboard",
         "docs/readme-overview.svg",
         "docs/plans/2026-06-08-attribution-baseline.md",
+        "docs/plans/2026-06-08-explicit-attribution-request.md",
     ]
 
     for relative_path in required_files:
@@ -74,13 +97,19 @@ def main():
     app_plist = parse_plist("ios-search-ads-sample/Info.plist", failures)
     project = read("ios-search-ads-sample.xcodeproj/project.pbxproj")
     app_delegate = read("ios-search-ads-sample/AppDelegate.swift")
+    view_controller = read("ios-search-ads-sample/ViewController.swift")
     active_app_delegate = strip_swift_line_comments(app_delegate)
+    active_view_controller = strip_swift_line_comments(view_controller)
     readme = read("README.md")
     vision = read("VISION.md")
     security = read("SECURITY.md")
     changes = read("CHANGES.md")
     gitignore = read(".gitignore")
-    plan = PLAN.read_text(encoding="utf-8") if PLAN.exists() else ""
+    baseline_plan = BASELINE_PLAN.read_text(encoding="utf-8") if BASELINE_PLAN.exists() else ""
+    explicit_request_plan = EXPLICIT_REQUEST_PLAN.read_text(encoding="utf-8") if EXPLICIT_REQUEST_PLAN.exists() else ""
+    launch_body = swift_function_body(active_app_delegate, "func application")
+    view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
+    request_action = swift_function_body(active_view_controller, "func requestAttribution")
 
     require(app_plist.get("CFBundleIdentifier") == "$(PRODUCT_BUNDLE_IDENTIFIER)",
             "Info.plist must keep PRODUCT_BUNDLE_IDENTIFIER indirection",
@@ -95,21 +124,44 @@ def main():
             "Xcode project must keep app plist and Swift source wiring",
             failures)
 
-    require("import iAd" in active_app_delegate,
-            "AppDelegate must keep the ADClient/iAd attribution sample import",
+    require("ADClient.shared().requestAttributionDetails" not in launch_body,
+            "AppDelegate must not request attribution at launch",
             failures)
-    require("ADClient.shared().requestAttributionDetails" in active_app_delegate,
-            "AppDelegate must keep the attribution request example",
+    require("import iAd" in active_view_controller,
+            "ViewController must keep the ADClient/iAd attribution sample import",
             failures)
-    require('"Version3.1"' in active_app_delegate and '"iad-attribution"' in active_app_delegate,
-            "AppDelegate must keep the documented attribution response lookup",
+    require("ADClient.shared().requestAttributionDetails" in request_action and
+            active_view_controller.count("ADClient.shared().requestAttributionDetails") == 1,
+            "ViewController must keep the attribution request behind the explicit action only",
             failures)
-    require(not re.search(r"\b(?:print|println|NSLog)\s*\(", active_app_delegate),
+    require("configureAttributionButton()" in view_did_load and
+            "ADClient.shared().requestAttributionDetails" not in view_did_load,
+            "ViewController must configure UI without requesting attribution during view load",
+            failures)
+    require("private let attributionButton" in active_view_controller and
+            "action: #selector(requestAttribution(_:))" in active_view_controller,
+            "ViewController must expose an explicit user action for attribution",
+            failures)
+    require("private var attributionRequestInProgress = false" in active_view_controller and
+            "private var attributionRequestCompleted = false" in active_view_controller and
+            "attributionRequestInProgress || attributionRequestCompleted" in request_action,
+            "ViewController must guard duplicate attribution requests",
+            failures)
+    require("attributionButton.isEnabled = false" in request_action and
+            "attributionButton.isEnabled = true" in request_action and
+            "attributionRequestCompleted = true" in request_action,
+            "ViewController must disable attribution while running and re-enable it on failure",
+            failures)
+    require('"Version3.1"' in request_action and '"iad-attribution"' in request_action,
+            "ViewController must keep the documented attribution response lookup",
+            failures)
+    active_attribution_sources = active_app_delegate + "\n" + active_view_controller
+    require(not re.search(r"\b(?:print|println|NSLog)\s*\(", active_attribution_sources),
             "Attribution callback must not log attribution data",
             failures)
     for forbidden in ["add(toSegments", "URLSession", "NSURLConnection", "NSURL", "http://", "https://", "upload", "UserDefaults"]:
-        require(forbidden not in active_app_delegate,
-                f"AppDelegate must not add storage, network, or segment behavior for attribution data: {forbidden}",
+        require(forbidden not in active_attribution_sources,
+                f"App source must not add storage, network, or segment behavior for attribution data: {forbidden}",
                 failures)
 
     swift_files = sorted((ROOT / "ios-search-ads-sample").rglob("*.swift"))
@@ -119,8 +171,8 @@ def main():
     require("*.local.xcconfig" in gitignore and ".env" in gitignore,
             ".gitignore must exclude local secret/config files",
             failures)
-    require("make check" in readme and "ADClient" in readme and "local-only" in readme.lower(),
-            "README must document static verification and local-only ADClient handling",
+    require("make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and "button" in readme.lower(),
+            "README must document static verification and local-only, user-triggered ADClient handling",
             failures)
     require("scripts/check-baseline.py" in vision and "local-only" in vision.lower(),
             "VISION must describe the current static privacy baseline",
@@ -128,11 +180,11 @@ def main():
     require("attribution" in security.lower() and "make check" in security,
             "SECURITY must document attribution privacy and the static baseline",
             failures)
-    require("debug logging" in changes and "segment" in changes and "make check" in changes,
-            "CHANGES must record logging, segment, and baseline updates",
+    require("debug logging" in changes and "segment" in changes and "make check" in changes and "user-triggered" in changes,
+            "CHANGES must record logging, segment, user-triggered attribution, and baseline updates",
             failures)
-    require("status: completed" in plan,
-            "plan must be marked completed",
+    require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan,
+            "plans must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

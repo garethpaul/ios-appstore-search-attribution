@@ -28,8 +28,8 @@ Helpful reports include:
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
-- Attribution responses can include sensitive device and campaign context. The sample should keep attribution response handling local-only and should not log, store, upload, or add segment behavior without explicit consent and data-flow documentation.
-- `make check` runs a static baseline that guards plist/storyboard metadata, Swift source inventory, ADClient request handling, and attribution logging/network/segment regressions when Xcode is unavailable.
+- Attribution responses can include sensitive device and campaign context. The sample should keep attribution response handling local-only and user-triggered, and should not log, store, upload, or add segment behavior without explicit consent and data-flow documentation.
+- `make check` runs a static baseline that guards plist/storyboard metadata, Swift source inventory, launch-time attribution requests, duplicate request handling, ADClient response handling, and attribution logging/network/segment regressions when Xcode is unavailable.
 
 ## Mobile Privacy Notes
 

@@ -20,6 +20,7 @@ Priority:
 - Preserve the ADClient attribution request example
 - Keep Apple's endpoint and request type documented
 - Avoid storing attribution responses or device identifiers unnecessarily
+- Keep attribution requests user-triggered rather than automatic on launch
 - Maintain the small sample project structure
 - Keep `scripts/check-baseline.py` passing for local-only attribution handling,
   Swift/Xcode metadata, source inventory, and privacy guardrails
@@ -49,6 +50,8 @@ store, or transmit attribution data beyond the sample's explicit purpose.
 Current baseline: `make check` runs `scripts/check-baseline.py` without Xcode.
 It verifies the ADClient request flow, Swift 3/iOS 10 project context,
 plist/storyboard XML, source inventory, and local-only attribution guardrails.
+It also verifies that attribution remains behind an explicit user action and is
+not requested from app launch or view-load code.
 
 ## What We Will Not Merge (For Now)
 
