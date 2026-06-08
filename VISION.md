@@ -1,5 +1,8 @@
 ## iOS App Store Search Attribution Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 iOS App Store Search Attribution is a Swift sample showing how to request Apple
 Search Ads attribution data through `ADClient`.
 
