@@ -11,17 +11,20 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 
 ## Repository Contents
 
+- `CHANGES.md` - concise history of maintenance changes
+- `Makefile` - local verification entry point
 - `README.md` - project overview and local usage notes
 - `ios-search-ads-sample` - source or example code
 - `ios-search-ads-sample.xcodeproj` - Xcode project file
 - `SECURITY.md` - security reporting and disclosure guidance
+- `scripts/check-baseline.py` - static attribution privacy verifier
 - `VISION.md` - project direction and maintenance guardrails
 
 Additional scan context:
 
 - Source directories: ios-search-ads-sample
 - Dependency and build manifests: none detected
-- Entry points or build surfaces: ios-search-ads-sample.xcodeproj
+- Entry points or build surfaces: `make check`, ios-search-ads-sample.xcodeproj
 - Test-looking files: no obvious test files detected
 
 ## Getting Started
@@ -30,23 +33,35 @@ Additional scan context:
 
 - Git
 - macOS with Xcode for building Apple platform projects
+- Python 3 for local static verification on non-macOS hosts
 
 ### Setup
 
 ```bash
 git clone https://github.com/garethpaul/ios-appstore-search-attribution.git
 cd ios-appstore-search-attribution
+make check
 ```
 
-The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
+The setup commands above validate the static baseline. Full attribution behavior still needs a compatible iOS environment and Apple framework support.
 
 ## Running or Using the Project
 
 - Open `ios-search-ads-sample.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
+- The sample uses `ADClient` to request Search Ads attribution data and keeps the response local-only.
+- Do not log, store, upload, or add segment behavior for attribution responses without a dedicated privacy design and user consent.
 
 ## Testing and Verification
 
-- Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+Run the local static baseline:
+
+```bash
+make check
+```
+
+The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the ADClient request flow, and guards against attribution logging, storage, network upload, or segment updates.
+
+For full legacy verification on macOS, use Xcode's test action or `xcodebuild test` with the appropriate scheme and destination.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -58,12 +73,14 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include ios-search-ads-sample/Info.plist.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include ios-search-ads-sample/Info.plist.
+- Attribution responses can contain sensitive device and campaign context. Keep attribution response handling local-only and documented.
 
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- Run `make check` before pushing changes to Swift sources, plist/storyboard files, project metadata, or attribution behavior.
 
 ## Contributing
 

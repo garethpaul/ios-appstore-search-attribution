@@ -29,16 +29,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     if let attributionDict = v3 as? [String : AnyObject]{
                         // iterate through protocol
                         if let searchAttribution: AnyObject = attributionDict["iad-attribution"] {
-                            // take the bool value and store somewhere or provide different experience
-                            print(searchAttribution)
+                            // Keep the attribution result local to this sample.
+                            _ = searchAttribution
                         }
                     }
                 }
             }
         }
-        
-        ADClient.shared().add(toSegments: ["installed"], replaceExisting: true)
+
         return true
     }
 }
-

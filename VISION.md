@@ -21,10 +21,11 @@ Priority:
 - Keep Apple's endpoint and request type documented
 - Avoid storing attribution responses or device identifiers unnecessarily
 - Maintain the small sample project structure
+- Keep `scripts/check-baseline.py` passing for local-only attribution handling,
+  Swift/Xcode metadata, source inventory, and privacy guardrails
 
 Next priorities:
 
-- Add Xcode/iOS version and framework availability notes
 - Add manual verification steps for attribution response handling
 - Modernize Swift/project settings in a dedicated pass
 - Document privacy expectations for attribution data
@@ -44,6 +45,10 @@ Canonical security policy and reporting:
 
 Attribution responses can involve device and campaign information. Do not log,
 store, or transmit attribution data beyond the sample's explicit purpose.
+
+Current baseline: `make check` runs `scripts/check-baseline.py` without Xcode.
+It verifies the ADClient request flow, Swift 3/iOS 10 project context,
+plist/storyboard XML, source inventory, and local-only attribution guardrails.
 
 ## What We Will Not Merge (For Now)
 

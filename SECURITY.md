@@ -28,10 +28,14 @@ Helpful reports include:
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
+- Attribution responses can include sensitive device and campaign context. The sample should keep attribution response handling local-only and should not log, store, upload, or add segment behavior without explicit consent and data-flow documentation.
+- `make check` runs a static baseline that guards plist/storyboard metadata, Swift source inventory, ADClient request handling, and attribution logging/network/segment regressions when Xcode is unavailable.
 
 ## Mobile Privacy Notes
 
 If this project requests device permissions such as location, camera, microphone, contacts, Bluetooth, health data, or local storage access, reports should describe the permission involved and whether sensitive data can be accessed, persisted, or transmitted unexpectedly. Please avoid testing against real third-party user data or accounts you do not control.
+
+Reports about attribution handling should describe whether attribution responses can be logged, stored, uploaded, added to segments, inferred without user awareness, or retained longer than the sample's local-only behavior.
 
 ## Dependency and Supply Chain Security
 
