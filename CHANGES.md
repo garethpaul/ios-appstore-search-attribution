@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-09
+
+- Added state-specific accessibility text for requesting, completed, and retry
+  attribution states.
+
 ## 2026-06-08
 
 - Removed raw attribution debug logging and the sample segment update from launch handling.

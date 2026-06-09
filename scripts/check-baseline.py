@@ -14,6 +14,7 @@ MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-08-main-thread-attribution-complet
 IN_FLIGHT_PLAN = ROOT / "docs/plans/2026-06-08-in-flight-attribution-button.md"
 COMPLETED_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-completed-state.md"
 ACCESSIBILITY_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-affordance.md"
+ACCESSIBILITY_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-state.md"
 
 
 def require(condition, message, failures):
@@ -89,6 +90,7 @@ def main():
         "docs/plans/2026-06-08-in-flight-attribution-button.md",
         "docs/plans/2026-06-09-attribution-completed-state.md",
         "docs/plans/2026-06-09-attribution-accessibility-affordance.md",
+        "docs/plans/2026-06-09-attribution-accessibility-state.md",
     ]
 
     for relative_path in required_files:
@@ -119,6 +121,7 @@ def main():
     in_flight_plan = IN_FLIGHT_PLAN.read_text(encoding="utf-8") if IN_FLIGHT_PLAN.exists() else ""
     completed_state_plan = COMPLETED_STATE_PLAN.read_text(encoding="utf-8") if COMPLETED_STATE_PLAN.exists() else ""
     accessibility_plan = ACCESSIBILITY_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_PLAN.exists() else ""
+    accessibility_state_plan = ACCESSIBILITY_STATE_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_STATE_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     request_action = swift_function_body(active_view_controller, "func requestAttribution")
@@ -163,6 +166,17 @@ def main():
             "without storing results" in active_view_controller,
             "ViewController must describe the local-only attribution action for accessibility",
             failures)
+    for accessibility_text in [
+        "Requesting Attribution",
+        "Attribution request is running locally without storing results",
+        "Try Attribution Again",
+        "Previous local attribution request failed; double tap to retry",
+        "Attribution Requested",
+        "Attribution request completed locally and the button is disabled",
+    ]:
+        require(accessibility_text in request_action,
+                f"ViewController must keep state-specific accessibility text: {accessibility_text}",
+                failures)
     require("private var attributionRequestInProgress = false" in active_view_controller and
             "private var attributionRequestCompleted = false" in active_view_controller and
             "attributionRequestInProgress || attributionRequestCompleted" in request_action,
@@ -208,18 +222,18 @@ def main():
             ".gitignore must exclude local secret/config files",
             failures)
     require("make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
-            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "accessibility" in readme.lower(),
+            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower(),
             "README must document static verification and local-only, user-triggered ADClient handling",
             failures)
     require("scripts/check-baseline.py" in vision and "local-only" in vision.lower() and
-            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "accessibility" in vision.lower(),
+            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower(),
             "VISION must describe the current static privacy baseline",
             failures)
-    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "accessibility" in security.lower(),
+    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower(),
             "SECURITY must document attribution privacy and the static baseline",
             failures)
     require("debug logging" in changes and "segment" in changes and "make check" in changes and
-            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "accessibility" in changes.lower(),
+            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower(),
             "CHANGES must record logging, segment, user-triggered attribution, in-flight UI, main-queue completion, and baseline updates",
             failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
@@ -231,6 +245,9 @@ def main():
             failures)
     require("status: completed" in accessibility_plan,
             "attribution accessibility affordance plan must be marked completed",
+            failures)
+    require("status: completed" in accessibility_state_plan,
+            "attribution accessibility state plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

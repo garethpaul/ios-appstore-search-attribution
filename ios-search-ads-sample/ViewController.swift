@@ -40,6 +40,8 @@ class ViewController: UIViewController {
 
         attributionRequestInProgress = true
         attributionButton.setTitle("Requesting Attribution...", for: .disabled)
+        attributionButton.accessibilityLabel = "Requesting Attribution"
+        attributionButton.accessibilityHint = "Attribution request is running locally without storing results"
         attributionButton.isEnabled = false
 
         ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in
@@ -52,6 +54,8 @@ class ViewController: UIViewController {
                 if error != nil {
                     strongSelf.attributionButton.isEnabled = true
                     strongSelf.attributionButton.setTitle("Try Again", for: .normal)
+                    strongSelf.attributionButton.accessibilityLabel = "Try Attribution Again"
+                    strongSelf.attributionButton.accessibilityHint = "Previous local attribution request failed; double tap to retry"
                     return
                 }
 
@@ -65,6 +69,8 @@ class ViewController: UIViewController {
                 strongSelf.attributionRequestCompleted = true
                 strongSelf.attributionButton.isEnabled = false
                 strongSelf.attributionButton.setTitle("Attribution Requested", for: .disabled)
+                strongSelf.attributionButton.accessibilityLabel = "Attribution Requested"
+                strongSelf.attributionButton.accessibilityHint = "Attribution request completed locally and the button is disabled"
             }
         }
     }
