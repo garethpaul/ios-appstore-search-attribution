@@ -23,6 +23,7 @@ Priority:
 - Keep attribution requests user-triggered rather than automatic on launch
 - Show a clear in-flight button state while attribution is being requested
 - Keep attribution completion UI state changes on the main queue
+- Keep attribution button accessibility text aligned with local-only behavior
 - Maintain the small sample project structure
 - Keep `scripts/check-baseline.py` passing for local-only attribution handling,
   Swift/Xcode metadata, source inventory, and privacy guardrails
@@ -55,7 +56,8 @@ plist/storyboard XML, source inventory, and local-only attribution guardrails.
 It also verifies that attribution remains behind an explicit user action, is
 not requested from app launch or view-load code, shows an in-flight disabled
 button title, keeps the completed state disabled, and updates completion UI
-state on the main queue.
+state on the main queue. Accessibility text should describe the local-only
+attribution action.
 
 ## What We Will Not Merge (For Now)
 

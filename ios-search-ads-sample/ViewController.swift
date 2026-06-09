@@ -21,6 +21,8 @@ class ViewController: UIViewController {
 
     private func configureAttributionButton() {
         attributionButton.setTitle("Request Attribution", for: .normal)
+        attributionButton.accessibilityLabel = "Request Attribution"
+        attributionButton.accessibilityHint = "Requests local Search Ads attribution without storing results"
         attributionButton.addTarget(self, action: #selector(requestAttribution(_:)), for: .touchUpInside)
         attributionButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(attributionButton)
