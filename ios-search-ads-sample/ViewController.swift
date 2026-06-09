@@ -10,6 +10,13 @@ import iAd
 
 class ViewController: UIViewController {
 
+    private enum AttributionButtonState {
+        case ready
+        case requesting
+        case retry
+        case completed
+    }
+
     private let attributionButton = UIButton(type: .system)
     private var attributionRequestInProgress = false
     private var attributionRequestCompleted = false
@@ -20,9 +27,7 @@ class ViewController: UIViewController {
     }
 
     private func configureAttributionButton() {
-        attributionButton.setTitle("Request Attribution", for: .normal)
-        attributionButton.accessibilityLabel = "Request Attribution"
-        attributionButton.accessibilityHint = "Requests local Search Ads attribution without storing results"
+        applyAttributionButtonState(.ready)
         attributionButton.addTarget(self, action: #selector(requestAttribution(_:)), for: .touchUpInside)
         attributionButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(attributionButton)
@@ -33,16 +38,38 @@ class ViewController: UIViewController {
         ])
     }
 
+    private func applyAttributionButtonState(_ state: AttributionButtonState) {
+        switch state {
+        case .ready:
+            attributionButton.setTitle("Request Attribution", for: .normal)
+            attributionButton.accessibilityLabel = "Request Attribution"
+            attributionButton.accessibilityHint = "Requests local Search Ads attribution without storing results"
+            attributionButton.isEnabled = true
+        case .requesting:
+            attributionButton.setTitle("Requesting Attribution...", for: .disabled)
+            attributionButton.accessibilityLabel = "Requesting Attribution"
+            attributionButton.accessibilityHint = "Attribution request is running locally without storing results"
+            attributionButton.isEnabled = false
+        case .retry:
+            attributionButton.setTitle("Try Again", for: .normal)
+            attributionButton.accessibilityLabel = "Try Attribution Again"
+            attributionButton.accessibilityHint = "Previous local attribution request failed; double tap to retry"
+            attributionButton.isEnabled = true
+        case .completed:
+            attributionButton.setTitle("Attribution Requested", for: .disabled)
+            attributionButton.accessibilityLabel = "Attribution Requested"
+            attributionButton.accessibilityHint = "Attribution request completed locally and the button is disabled"
+            attributionButton.isEnabled = false
+        }
+    }
+
     @objc private func requestAttribution(_: UIButton) {
         if attributionRequestInProgress || attributionRequestCompleted {
             return
         }
 
         attributionRequestInProgress = true
-        attributionButton.setTitle("Requesting Attribution...", for: .disabled)
-        attributionButton.accessibilityLabel = "Requesting Attribution"
-        attributionButton.accessibilityHint = "Attribution request is running locally without storing results"
-        attributionButton.isEnabled = false
+        applyAttributionButtonState(.requesting)
 
         ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in
             DispatchQueue.main.async { [weak self] in
@@ -52,10 +79,7 @@ class ViewController: UIViewController {
 
                 strongSelf.attributionRequestInProgress = false
                 if error != nil {
-                    strongSelf.attributionButton.isEnabled = true
-                    strongSelf.attributionButton.setTitle("Try Again", for: .normal)
-                    strongSelf.attributionButton.accessibilityLabel = "Try Attribution Again"
-                    strongSelf.attributionButton.accessibilityHint = "Previous local attribution request failed; double tap to retry"
+                    strongSelf.applyAttributionButtonState(.retry)
                     return
                 }
 
@@ -67,10 +91,7 @@ class ViewController: UIViewController {
                 }
 
                 strongSelf.attributionRequestCompleted = true
-                strongSelf.attributionButton.isEnabled = false
-                strongSelf.attributionButton.setTitle("Attribution Requested", for: .disabled)
-                strongSelf.attributionButton.accessibilityLabel = "Attribution Requested"
-                strongSelf.attributionButton.accessibilityHint = "Attribution request completed locally and the button is disabled"
+                strongSelf.applyAttributionButtonState(.completed)
             }
         }
     }

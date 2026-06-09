@@ -51,7 +51,10 @@ The setup commands above validate the static baseline. Full attribution behavior
 ## Running or Using the Project
 
 - Open `ios-search-ads-sample.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
-- Tap the attribution button in the sample app to request Search Ads attribution data through `ADClient`; the button shows an in-flight disabled state, the response stays local-only, and completion UI updates return to the main queue.
+- Tap the attribution button in the sample app to request Search Ads attribution
+  data through `ADClient`; the centralized button state helper shows an
+  in-flight disabled state, the response stays local-only, and completion UI
+  updates return to the main queue.
 - Do not log, store, upload, or add segment behavior for attribution responses without a dedicated privacy design and user consent.
 
 ## Testing and Verification
@@ -69,7 +72,7 @@ The `lint`, `test`, and `build` targets intentionally alias the static baseline
 on hosts without the legacy Xcode toolchain, so the standard local gate commands
 stay available while preserving the single source of truth.
 
-The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the user-triggered ADClient request flow, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
+The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 
 For full legacy verification on macOS, use Xcode's test action or `xcodebuild test` with the appropriate scheme and destination.
 
@@ -85,7 +88,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include ios-search-ads-sample/Info.plist.
 - Attribution responses can contain sensitive device and campaign context. Keep attribution response handling local-only, user-triggered, and documented.
 - Keep attribution button state-specific accessibility text aligned with the
-  local-only privacy boundary.
+  local-only privacy boundary through the centralized button state helper.
 
 ## Maintenance Notes
 
@@ -95,6 +98,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-09-attribution-completed-state.md` for the attribution completed state guardrail.
 - See `docs/plans/2026-06-09-attribution-accessibility-affordance.md` for the attribution accessibility guardrail.
 - See `docs/plans/2026-06-09-attribution-accessibility-state.md` for the attribution state-specific accessibility guardrail.
+- See `docs/plans/2026-06-09-attribution-button-state-helper.md` for the centralized button state guardrail.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, plist/storyboard files, project metadata, or attribution behavior.
 

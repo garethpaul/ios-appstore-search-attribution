@@ -6,6 +6,8 @@
   static attribution baseline.
 - Added state-specific accessibility text for requesting, completed, and retry
   attribution states.
+- Centralized button state updates for attribution titles, enabled state, and
+  accessibility text.
 
 ## 2026-06-08
 

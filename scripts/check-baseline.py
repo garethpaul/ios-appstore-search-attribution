@@ -16,6 +16,7 @@ IN_FLIGHT_PLAN = ROOT / "docs/plans/2026-06-08-in-flight-attribution-button.md"
 COMPLETED_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-completed-state.md"
 ACCESSIBILITY_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-affordance.md"
 ACCESSIBILITY_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-state.md"
+BUTTON_STATE_HELPER_PLAN = ROOT / "docs/plans/2026-06-09-attribution-button-state-helper.md"
 
 
 def require(condition, message, failures):
@@ -93,6 +94,7 @@ def main():
         "docs/plans/2026-06-09-attribution-completed-state.md",
         "docs/plans/2026-06-09-attribution-accessibility-affordance.md",
         "docs/plans/2026-06-09-attribution-accessibility-state.md",
+        "docs/plans/2026-06-09-attribution-button-state-helper.md",
     ]
 
     for relative_path in required_files:
@@ -126,13 +128,16 @@ def main():
     completed_state_plan = COMPLETED_STATE_PLAN.read_text(encoding="utf-8") if COMPLETED_STATE_PLAN.exists() else ""
     accessibility_plan = ACCESSIBILITY_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_PLAN.exists() else ""
     accessibility_state_plan = ACCESSIBILITY_STATE_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_STATE_PLAN.exists() else ""
+    button_state_helper_plan = BUTTON_STATE_HELPER_PLAN.read_text(encoding="utf-8") if BUTTON_STATE_HELPER_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
+    configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
+    button_state_helper = swift_function_body(active_view_controller, "func applyAttributionButtonState")
     request_action = swift_function_body(active_view_controller, "func requestAttribution")
     attribution_request_index = request_action.find("ADClient.shared().requestAttributionDetails")
     main_dispatch_index = request_action.find("DispatchQueue.main.async")
-    requesting_title_index = request_action.find('attributionButton.setTitle("Requesting Attribution...", for: .disabled)')
-    disable_button_index = request_action.find("attributionButton.isEnabled = false")
+    requesting_title_index = button_state_helper.find('attributionButton.setTitle("Requesting Attribution...", for: .disabled)')
+    disable_button_index = button_state_helper.find("attributionButton.isEnabled = false", requesting_title_index)
 
     require(app_plist.get("CFBundleIdentifier") == "$(PRODUCT_BUNDLE_IDENTIFIER)",
             "Info.plist must keep PRODUCT_BUNDLE_IDENTIFIER indirection",
@@ -165,6 +170,14 @@ def main():
             "action: #selector(requestAttribution(_:))" in active_view_controller,
             "ViewController must expose an explicit user action for attribution",
             failures)
+    require("private enum AttributionButtonState" in active_view_controller and
+            all(f"case {state}" in active_view_controller for state in ["ready", "requesting", "retry", "completed"]) and
+            "func applyAttributionButtonState" in active_view_controller,
+            "ViewController must centralize attribution button states",
+            failures)
+    require("applyAttributionButtonState(.ready)" in configure_button,
+            "ViewController must configure the initial attribution button state through the helper",
+            failures)
     require('attributionButton.accessibilityLabel = "Request Attribution"' in active_view_controller and
             "attributionButton.accessibilityHint" in active_view_controller and
             "without storing results" in active_view_controller,
@@ -178,7 +191,7 @@ def main():
         "Attribution Requested",
         "Attribution request completed locally and the button is disabled",
     ]:
-        require(accessibility_text in request_action,
+        require(accessibility_text in button_state_helper,
                 f"ViewController must keep state-specific accessibility text: {accessibility_text}",
                 failures)
     require("private var attributionRequestInProgress = false" in active_view_controller and
@@ -186,23 +199,35 @@ def main():
             "attributionRequestInProgress || attributionRequestCompleted" in request_action,
             "ViewController must guard duplicate attribution requests",
             failures)
-    require("attributionButton.isEnabled = false" in request_action and
-            "attributionButton.isEnabled = true" in request_action and
+    require("attributionButton.isEnabled = false" in button_state_helper and
+            "attributionButton.isEnabled = true" in button_state_helper and
             "attributionRequestCompleted = true" in request_action,
             "ViewController must disable attribution while running and re-enable it on failure",
             failures)
-    require(request_action.count("attributionButton.isEnabled = false") >= 2,
+    require(button_state_helper.count("attributionButton.isEnabled = false") >= 2,
             "ViewController must keep the attribution button disabled after completed success",
             failures)
     require(requesting_title_index != -1 and requesting_title_index < disable_button_index,
             "ViewController must show an in-flight disabled title before disabling attribution",
+            failures)
+    require(request_action.count("applyAttributionButtonState(") == 3 and
+            "applyAttributionButtonState(.requesting)" in request_action and
+            "applyAttributionButtonState(.retry)" in request_action and
+            "applyAttributionButtonState(.completed)" in request_action,
+            "ViewController must drive request, retry, and completed button states through the helper",
+            failures)
+    require("attributionButton.setTitle" not in request_action and
+            "attributionButton.accessibility" not in request_action and
+            "attributionButton.isEnabled" not in request_action,
+            "ViewController must keep request callback button mutations centralized",
             failures)
     require(attribution_request_index != -1 and main_dispatch_index > attribution_request_index,
             "ViewController must dispatch attribution completion handling to the main queue",
             failures)
     require(main_dispatch_index != -1 and
             request_action.find("attributionRequestInProgress = false", main_dispatch_index) != -1 and
-            request_action.find("attributionButton.setTitle", main_dispatch_index) != -1 and
+            request_action.find("applyAttributionButtonState(.retry)", main_dispatch_index) != -1 and
+            request_action.find("applyAttributionButtonState(.completed)", main_dispatch_index) != -1 and
             request_action.find("attributionRequestCompleted = true", main_dispatch_index) != -1,
             "ViewController must keep attribution completion state and UI updates inside the main-queue block",
             failures)
@@ -229,18 +254,18 @@ def main():
             "Makefile must expose lint, test, and build aliases for the local baseline",
             failures)
     require("make lint" in readme and "make test" in readme and "make build" in readme and "make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
-            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower(),
+            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower() and "centralized button state" in readme.lower(),
             "README must document static verification and local-only, user-triggered ADClient handling",
             failures)
     require("scripts/check-baseline.py" in vision and "make lint" in vision and "make test" in vision and "make build" in vision and "local-only" in vision.lower() and
-            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower(),
+            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower() and "centralized button state" in vision.lower(),
             "VISION must describe the current static privacy baseline",
             failures)
-    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower(),
+    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower() and "centralized button state" in security.lower(),
             "SECURITY must document attribution privacy and the static baseline",
             failures)
     require("debug logging" in changes and "segment" in changes and "make check" in changes and "make lint" in changes and "make test" in changes and "make build" in changes and
-            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower(),
+            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower() and "centralized button state" in changes.lower(),
             "CHANGES must record logging, segment, user-triggered attribution, in-flight UI, main-queue completion, and baseline updates",
             failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
@@ -258,6 +283,9 @@ def main():
             failures)
     require("status: completed" in accessibility_state_plan,
             "attribution accessibility state plan must be marked completed",
+            failures)
+    require("status: completed" in button_state_helper_plan,
+            "attribution button state helper plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):
