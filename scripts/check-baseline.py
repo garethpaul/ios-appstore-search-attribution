@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE_PLAN = ROOT / "docs/plans/2026-06-08-attribution-baseline.md"
+MAKE_GATES_PLAN = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
 EXPLICIT_REQUEST_PLAN = ROOT / "docs/plans/2026-06-08-explicit-attribution-request.md"
 MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-08-main-thread-attribution-completion.md"
 IN_FLIGHT_PLAN = ROOT / "docs/plans/2026-06-08-in-flight-attribution-button.md"
@@ -85,6 +86,7 @@ def main():
         "ios-search-ads-sample/Base.lproj/LaunchScreen.storyboard",
         "docs/readme-overview.svg",
         "docs/plans/2026-06-08-attribution-baseline.md",
+        "docs/plans/2026-06-09-make-gate-aliases.md",
         "docs/plans/2026-06-08-explicit-attribution-request.md",
         "docs/plans/2026-06-08-main-thread-attribution-completion.md",
         "docs/plans/2026-06-08-in-flight-attribution-button.md",
@@ -115,7 +117,9 @@ def main():
     security = read("SECURITY.md")
     changes = read("CHANGES.md")
     gitignore = read(".gitignore")
+    makefile = read("Makefile")
     baseline_plan = BASELINE_PLAN.read_text(encoding="utf-8") if BASELINE_PLAN.exists() else ""
+    make_gates_plan = MAKE_GATES_PLAN.read_text(encoding="utf-8") if MAKE_GATES_PLAN.exists() else ""
     explicit_request_plan = EXPLICIT_REQUEST_PLAN.read_text(encoding="utf-8") if EXPLICIT_REQUEST_PLAN.exists() else ""
     main_thread_plan = MAIN_THREAD_PLAN.read_text(encoding="utf-8") if MAIN_THREAD_PLAN.exists() else ""
     in_flight_plan = IN_FLIGHT_PLAN.read_text(encoding="utf-8") if IN_FLIGHT_PLAN.exists() else ""
@@ -221,24 +225,30 @@ def main():
     require("*.local.xcconfig" in gitignore and ".env" in gitignore,
             ".gitignore must exclude local secret/config files",
             failures)
-    require("make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
+    require(".PHONY: build check lint test" in makefile and "lint test build: check" in makefile,
+            "Makefile must expose lint, test, and build aliases for the local baseline",
+            failures)
+    require("make lint" in readme and "make test" in readme and "make build" in readme and "make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
             "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower(),
             "README must document static verification and local-only, user-triggered ADClient handling",
             failures)
-    require("scripts/check-baseline.py" in vision and "local-only" in vision.lower() and
+    require("scripts/check-baseline.py" in vision and "make lint" in vision and "make test" in vision and "make build" in vision and "local-only" in vision.lower() and
             "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower(),
             "VISION must describe the current static privacy baseline",
             failures)
     require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower(),
             "SECURITY must document attribution privacy and the static baseline",
             failures)
-    require("debug logging" in changes and "segment" in changes and "make check" in changes and
+    require("debug logging" in changes and "segment" in changes and "make check" in changes and "make lint" in changes and "make test" in changes and "make build" in changes and
             "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower(),
             "CHANGES must record logging, segment, user-triggered attribution, in-flight UI, main-queue completion, and baseline updates",
             failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
             "status: completed" in main_thread_plan and "status: completed" in in_flight_plan,
             "plans must be marked completed",
+            failures)
+    require("status: completed" in make_gates_plan,
+            "make gate aliases plan must be marked completed",
             failures)
     require("status: completed" in completed_state_plan,
             "attribution completed state plan must be marked completed",

@@ -27,6 +27,8 @@ Priority:
 - Maintain the small sample project structure
 - Keep `scripts/check-baseline.py` passing for local-only attribution handling,
   Swift/Xcode metadata, source inventory, and privacy guardrails
+- Keep `make lint`, `make test`, `make build`, and `make check` available as
+  local verification gates
 
 Next priorities:
 
@@ -50,14 +52,15 @@ Canonical security policy and reporting:
 Attribution responses can involve device and campaign information. Do not log,
 store, or transmit attribution data beyond the sample's explicit purpose.
 
-Current baseline: `make check` runs `scripts/check-baseline.py` without Xcode.
-It verifies the ADClient request flow, Swift 3/iOS 10 project context,
-plist/storyboard XML, source inventory, and local-only attribution guardrails.
-It also verifies that attribution remains behind an explicit user action, is
-not requested from app launch or view-load code, shows an in-flight disabled
-button title, keeps the completed state disabled, and updates completion UI
-state on the main queue. State-specific accessibility text should describe the
-local-only attribution action across requesting, completed, and retry states.
+Current baseline: `make lint`, `make test`, `make build`, and `make check` run
+`scripts/check-baseline.py` without Xcode. It verifies the ADClient request
+flow, Swift 3/iOS 10 project context, plist/storyboard XML, source inventory,
+and local-only attribution guardrails. It also verifies that attribution remains
+behind an explicit user action, is not requested from app launch or view-load
+code, shows an in-flight disabled button title, keeps the completed state
+disabled, and updates completion UI state on the main queue. State-specific
+accessibility text should describe the local-only attribution action across
+requesting, completed, and retry states.
 
 ## What We Will Not Merge (For Now)
 
