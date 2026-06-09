@@ -59,7 +59,7 @@ Run the local static baseline:
 make check
 ```
 
-The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the user-triggered ADClient request flow, requires the in-flight disabled button title, keeps attribution completion UI updates on the main queue, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
+The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the user-triggered ADClient request flow, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 
 For full legacy verification on macOS, use Xcode's test action or `xcodebuild test` with the appropriate scheme and destination.
 
@@ -80,6 +80,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-09-attribution-completed-state.md` for the attribution completed state guardrail.
 - Run `make check` before pushing changes to Swift sources, plist/storyboard files, project metadata, or attribution behavior.
 
 ## Contributing

@@ -54,7 +54,8 @@ It verifies the ADClient request flow, Swift 3/iOS 10 project context,
 plist/storyboard XML, source inventory, and local-only attribution guardrails.
 It also verifies that attribution remains behind an explicit user action, is
 not requested from app launch or view-load code, shows an in-flight disabled
-button title, and updates completion UI state on the main queue.
+button title, keeps the completed state disabled, and updates completion UI
+state on the main queue.
 
 ## What We Will Not Merge (For Now)
 

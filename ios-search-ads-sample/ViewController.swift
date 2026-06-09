@@ -61,6 +61,7 @@ class ViewController: UIViewController {
                 }
 
                 strongSelf.attributionRequestCompleted = true
+                strongSelf.attributionButton.isEnabled = false
                 strongSelf.attributionButton.setTitle("Attribution Requested", for: .disabled)
             }
         }
