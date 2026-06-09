@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BASELINE_PLAN = ROOT / "docs/plans/2026-06-08-attribution-baseline.md"
 EXPLICIT_REQUEST_PLAN = ROOT / "docs/plans/2026-06-08-explicit-attribution-request.md"
 MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-08-main-thread-attribution-completion.md"
+IN_FLIGHT_PLAN = ROOT / "docs/plans/2026-06-08-in-flight-attribution-button.md"
 
 
 def require(condition, message, failures):
@@ -83,6 +84,7 @@ def main():
         "docs/plans/2026-06-08-attribution-baseline.md",
         "docs/plans/2026-06-08-explicit-attribution-request.md",
         "docs/plans/2026-06-08-main-thread-attribution-completion.md",
+        "docs/plans/2026-06-08-in-flight-attribution-button.md",
     ]
 
     for relative_path in required_files:
@@ -110,11 +112,14 @@ def main():
     baseline_plan = BASELINE_PLAN.read_text(encoding="utf-8") if BASELINE_PLAN.exists() else ""
     explicit_request_plan = EXPLICIT_REQUEST_PLAN.read_text(encoding="utf-8") if EXPLICIT_REQUEST_PLAN.exists() else ""
     main_thread_plan = MAIN_THREAD_PLAN.read_text(encoding="utf-8") if MAIN_THREAD_PLAN.exists() else ""
+    in_flight_plan = IN_FLIGHT_PLAN.read_text(encoding="utf-8") if IN_FLIGHT_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     request_action = swift_function_body(active_view_controller, "func requestAttribution")
     attribution_request_index = request_action.find("ADClient.shared().requestAttributionDetails")
     main_dispatch_index = request_action.find("DispatchQueue.main.async")
+    requesting_title_index = request_action.find('attributionButton.setTitle("Requesting Attribution...", for: .disabled)')
+    disable_button_index = request_action.find("attributionButton.isEnabled = false")
 
     require(app_plist.get("CFBundleIdentifier") == "$(PRODUCT_BUNDLE_IDENTIFIER)",
             "Info.plist must keep PRODUCT_BUNDLE_IDENTIFIER indirection",
@@ -157,6 +162,9 @@ def main():
             "attributionRequestCompleted = true" in request_action,
             "ViewController must disable attribution while running and re-enable it on failure",
             failures)
+    require(requesting_title_index != -1 and requesting_title_index < disable_button_index,
+            "ViewController must show an in-flight disabled title before disabling attribution",
+            failures)
     require(attribution_request_index != -1 and main_dispatch_index > attribution_request_index,
             "ViewController must dispatch attribution completion handling to the main queue",
             failures)
@@ -186,21 +194,22 @@ def main():
             ".gitignore must exclude local secret/config files",
             failures)
     require("make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
-            "button" in readme.lower() and "main queue" in readme.lower(),
+            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower(),
             "README must document static verification and local-only, user-triggered ADClient handling",
             failures)
-    require("scripts/check-baseline.py" in vision and "local-only" in vision.lower() and "main queue" in vision.lower(),
+    require("scripts/check-baseline.py" in vision and "local-only" in vision.lower() and
+            "main queue" in vision.lower() and "in-flight" in vision.lower(),
             "VISION must describe the current static privacy baseline",
             failures)
-    require("attribution" in security.lower() and "make check" in security,
+    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower(),
             "SECURITY must document attribution privacy and the static baseline",
             failures)
     require("debug logging" in changes and "segment" in changes and "make check" in changes and
-            "user-triggered" in changes and "main queue" in changes,
-            "CHANGES must record logging, segment, user-triggered attribution, main-queue completion, and baseline updates",
+            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower(),
+            "CHANGES must record logging, segment, user-triggered attribution, in-flight UI, main-queue completion, and baseline updates",
             failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
-            "status: completed" in main_thread_plan,
+            "status: completed" in main_thread_plan and "status: completed" in in_flight_plan,
             "plans must be marked completed",
             failures)
 

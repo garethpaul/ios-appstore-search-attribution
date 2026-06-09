@@ -37,6 +37,7 @@ class ViewController: UIViewController {
         }
 
         attributionRequestInProgress = true
+        attributionButton.setTitle("Requesting Attribution...", for: .disabled)
         attributionButton.isEnabled = false
 
         ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in

@@ -48,7 +48,7 @@ The setup commands above validate the static baseline. Full attribution behavior
 ## Running or Using the Project
 
 - Open `ios-search-ads-sample.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
-- Tap the attribution button in the sample app to request Search Ads attribution data through `ADClient`; the response stays local-only and completion UI updates return to the main queue.
+- Tap the attribution button in the sample app to request Search Ads attribution data through `ADClient`; the button shows an in-flight disabled state, the response stays local-only, and completion UI updates return to the main queue.
 - Do not log, store, upload, or add segment behavior for attribution responses without a dedicated privacy design and user consent.
 
 ## Testing and Verification
@@ -59,7 +59,7 @@ Run the local static baseline:
 make check
 ```
 
-The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the user-triggered ADClient request flow, keeps attribution completion UI updates on the main queue, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
+The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks Swift 3 and iOS 10 project context, verifies the user-triggered ADClient request flow, requires the in-flight disabled button title, keeps attribution completion UI updates on the main queue, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 
 For full legacy verification on macOS, use Xcode's test action or `xcodebuild test` with the appropriate scheme and destination.
 

@@ -21,6 +21,7 @@ Priority:
 - Keep Apple's endpoint and request type documented
 - Avoid storing attribution responses or device identifiers unnecessarily
 - Keep attribution requests user-triggered rather than automatic on launch
+- Show a clear in-flight button state while attribution is being requested
 - Keep attribution completion UI state changes on the main queue
 - Maintain the small sample project structure
 - Keep `scripts/check-baseline.py` passing for local-only attribution handling,
@@ -52,8 +53,8 @@ Current baseline: `make check` runs `scripts/check-baseline.py` without Xcode.
 It verifies the ADClient request flow, Swift 3/iOS 10 project context,
 plist/storyboard XML, source inventory, and local-only attribution guardrails.
 It also verifies that attribution remains behind an explicit user action, is
-not requested from app launch or view-load code, and updates completion UI state
-on the main queue.
+not requested from app launch or view-load code, shows an in-flight disabled
+button title, and updates completion UI state on the main queue.
 
 ## What We Will Not Merge (For Now)
 
