@@ -35,7 +35,8 @@ Priority:
   local verification gates
 - Keep the project on Swift 5 with the oldest deployment target supported by
   the hosted Xcode SDK
-- Keep pinned macOS CI compiling an unsigned device-SDK build through the
+- Keep pinned macOS CI parsing the project and type-checking Swift against the
+  device SDK through the
   canonical `make check` gate
 
 Next priorities:
@@ -73,10 +74,11 @@ requesting, completed, and retry states through the centralized button state
 helper.
 Accessibility announcements should describe user-triggered attribution state
 changes for requesting, completed, and retry states.
-On macOS, the baseline should compile and link an unsigned device-SDK build
-without launching the app or invoking ADClient. The device SDK is required
-because current arm64 simulator frameworks omit the deprecated ADClient
-implementation. A successful build does not prove that the service still works.
+On macOS, the baseline should parse the project and type-check both Swift files
+against the current device SDK without launching the app or invoking ADClient.
+Current iOS SDKs no longer provide a linkable ADClient implementation, so full
+runtime/link verification requires an older compatible SDK or a separate
+AdServices migration. Successful type-checking does not prove the service works.
 
 ## What We Will Not Merge (For Now)
 

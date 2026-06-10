@@ -36,9 +36,9 @@ Helpful reports include:
   signals.
 - Accessibility announcements should stay aligned with those user-triggered
   state changes.
-- The pinned macOS workflow uses read-only repository permissions and compiles
-  an unsigned device-SDK build without launching ADClient or handling
-  attribution payloads.
+- The pinned macOS workflow uses read-only repository permissions, parses the
+  project, and type-checks its Swift sources against the device SDK without
+  launching ADClient or handling attribution payloads.
 
 ## Mobile Privacy Notes
 

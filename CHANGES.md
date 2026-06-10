@@ -8,8 +8,9 @@
 - Raised the deployment target from iOS 10 to iOS 12, the minimum supported by
   the hosted Xcode 16.4 SDK.
 - Added the missing iAd framework build-phase linkage required by ADClient.
-- Upgraded Xcode-enabled validation from project parsing to an unsigned iOS
-  device-SDK build because the current arm64 simulator omits ADClient symbols.
+- Upgraded Xcode-enabled validation to parse the project and type-check both
+  Swift sources against the iOS device SDK. Current iOS SDKs no longer provide
+  a linkable ADClient implementation.
 - Added pinned, read-only macOS CI for the canonical `make check` baseline.
 - Kept hosted validation from launching ADClient or handling attribution
   responses.

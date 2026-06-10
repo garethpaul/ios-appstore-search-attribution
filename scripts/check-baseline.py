@@ -20,7 +20,7 @@ ACCESSIBILITY_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibili
 BUTTON_STATE_HELPER_PLAN = ROOT / "docs/plans/2026-06-09-attribution-button-state-helper.md"
 ACCESSIBILITY_ANNOUNCEMENT_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-announcements.md"
 HOSTED_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-10-hosted-project-validation.md"
-SWIFT_5_BUILD_PLAN = ROOT / "docs/plans/2026-06-10-swift-5-simulator-build.md"
+SWIFT_5_BUILD_PLAN = ROOT / "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md"
 
 
 def require(condition, message, failures):
@@ -102,7 +102,7 @@ def main():
         "docs/plans/2026-06-09-attribution-button-state-helper.md",
         "docs/plans/2026-06-09-attribution-accessibility-announcements.md",
         "docs/plans/2026-06-10-hosted-project-validation.md",
-        "docs/plans/2026-06-10-swift-5-simulator-build.md",
+        "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md",
     ]
 
     for relative_path in required_files:
@@ -337,24 +337,46 @@ def main():
             failures)
 
     if shutil.which("xcodebuild"):
-        result = subprocess.run(
-            [
-                "xcodebuild",
-                "-project", "ios-search-ads-sample.xcodeproj",
-                "-target", "ios-search-ads-sample",
-                "-configuration", "Debug",
-                "-sdk", "iphoneos",
-                "CODE_SIGNING_ALLOWED=NO",
-                "build",
-            ],
+        project_result = subprocess.run(
+            ["xcodebuild", "-list", "-project", "ios-search-ads-sample.xcodeproj"],
             cwd=ROOT,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
         )
-        require(result.returncode == 0,
-                "xcodebuild could not compile ios-search-ads-sample for the device SDK: " + result.stdout.strip(),
+        require(project_result.returncode == 0,
+                "xcodebuild could not parse ios-search-ads-sample.xcodeproj: " + project_result.stdout.strip(),
                 failures)
+
+        sdk_result = subprocess.run(
+            ["xcrun", "--sdk", "iphoneos", "--show-sdk-path"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        require(sdk_result.returncode == 0,
+                "xcrun could not locate the iOS device SDK: " + sdk_result.stdout.strip(),
+                failures)
+        if sdk_result.returncode == 0:
+            typecheck_result = subprocess.run(
+                [
+                    "xcrun", "--sdk", "iphoneos", "swiftc",
+                    "-typecheck",
+                    "-swift-version", "5",
+                    "-target", "arm64-apple-ios12.0",
+                    "-sdk", sdk_result.stdout.strip(),
+                    "ios-search-ads-sample/AppDelegate.swift",
+                    "ios-search-ads-sample/ViewController.swift",
+                ],
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            require(typecheck_result.returncode == 0,
+                    "swiftc could not type-check the app against the iOS device SDK: " + typecheck_result.stdout.strip(),
+                    failures)
     else:
         print("xcodebuild unavailable; static iOS baseline only.")
 

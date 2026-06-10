@@ -1,4 +1,4 @@
-# Swift 5 Device SDK Build
+# Swift 5 Device SDK Type-Check
 
 status: completed
 
@@ -19,10 +19,13 @@ application source.
   `UIAccessibility.post`.
 - Added explicit iAd framework linkage so the ADClient reference resolves at
   link time.
-- Upgraded Xcode-enabled `make check` runs to compile and link an unsigned Debug
-  build against the iOS device SDK without launching the app or requesting
-  attribution. The device SDK is required because the current arm64 simulator
-  framework omits the deprecated ADClient implementation.
+- Upgraded Xcode-enabled `make check` runs to parse the Xcode project and
+  type-check both Swift sources against the current iOS device SDK without
+  launching the app or requesting attribution.
+- Documented that current simulator and device SDKs expose the deprecated iAd
+  module for compilation but omit the ADClient implementation required to link
+  an executable. Full runtime/link verification therefore requires an older
+  compatible SDK or a separate AdServices migration.
 - Extended the static baseline and project documentation to preserve the build
   contract.
 
@@ -33,5 +36,5 @@ application source.
 - `make test`
 - `make build`
 - `make check`
-- hosted macOS device-SDK build
+- hosted macOS device-SDK type-check
 - `git diff --check`
