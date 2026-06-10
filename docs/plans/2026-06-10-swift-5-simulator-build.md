@@ -17,6 +17,8 @@ application source.
   the hosted Xcode 16.4 simulator SDK, while preserving legacy ADClient behavior.
 - Replaced the obsolete global accessibility announcement API with
   `UIAccessibility.post`.
+- Added explicit iAd framework linkage so the ADClient reference resolves at
+  link time.
 - Upgraded Xcode-enabled `make check` runs to compile an unsigned Debug build
   for the iOS Simulator without launching the app or requesting attribution.
 - Extended the static baseline and project documentation to preserve the build

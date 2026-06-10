@@ -7,6 +7,7 @@
   `UIAccessibility.post` API.
 - Raised the deployment target from iOS 10 to iOS 12, the minimum supported by
   the hosted Xcode 16.4 simulator SDK.
+- Added the missing iAd framework build-phase linkage required by ADClient.
 - Upgraded Xcode-enabled validation from project parsing to an unsigned iOS
   Simulator build.
 - Added pinned, read-only macOS CI for the canonical `make check` baseline.

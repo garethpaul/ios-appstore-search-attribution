@@ -12,6 +12,7 @@
 		7F0A5B991D1214B500128EFA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7F0A5B971D1214B500128EFA /* Main.storyboard */; };
 		7F0A5B9B1D1214B500128EFA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7F0A5B9A1D1214B500128EFA /* Assets.xcassets */; };
 		7F0A5B9E1D1214B500128EFA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7F0A5B9C1D1214B500128EFA /* LaunchScreen.storyboard */; };
+		7F0A5BA81D1214E000128EFA /* iAd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F0A5BA71D1214E000128EFA /* iAd.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +24,7 @@
 		7F0A5B9D1D1214B500128EFA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7F0A5B9F1D1214B500128EFA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7F0A5BA61D1214E000128EFA /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+		7F0A5BA71D1214E000128EFA /* iAd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iAd.framework; path = System/Library/Frameworks/iAd.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -30,6 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7F0A5BA81D1214E000128EFA /* iAd.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				7F0A5BA61D1214E000128EFA /* AdSupport.framework */,
+				7F0A5BA71D1214E000128EFA /* iAd.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

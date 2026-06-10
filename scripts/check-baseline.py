@@ -168,6 +168,10 @@ def main():
     require("ios-search-ads-sample/Info.plist" in project and "AppDelegate.swift in Sources" in project,
             "Xcode project must keep app plist and Swift source wiring",
             failures)
+    require(project.count("iAd.framework in Frameworks") == 2 and
+            "System/Library/Frameworks/iAd.framework" in project,
+            "Xcode project must link the iAd framework used by ADClient",
+            failures)
 
     require("ADClient.shared().requestAttributionDetails" not in launch_body,
             "AppDelegate must not request attribution at launch",
