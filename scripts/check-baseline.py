@@ -321,8 +321,8 @@ def main():
     require("status: completed" in hosted_validation_plan and "make check" in hosted_validation_plan,
             "hosted project validation plan must be completed and document make check",
             failures)
-    require("status: completed" in swift_5_build_plan and "simulator" in swift_5_build_plan.lower(),
-            "Swift 5 simulator build plan must be completed and document simulator verification",
+    require("status: completed" in swift_5_build_plan and "device sdk" in swift_5_build_plan.lower(),
+            "Swift 5 build plan must be completed and document device SDK verification",
             failures)
     require("permissions:\n  contents: read" in workflow,
             "Check workflow must use read-only repository permissions",
@@ -343,7 +343,7 @@ def main():
                 "-project", "ios-search-ads-sample.xcodeproj",
                 "-target", "ios-search-ads-sample",
                 "-configuration", "Debug",
-                "-sdk", "iphonesimulator",
+                "-sdk", "iphoneos",
                 "CODE_SIGNING_ALLOWED=NO",
                 "build",
             ],
@@ -353,7 +353,7 @@ def main():
             text=True,
         )
         require(result.returncode == 0,
-                "xcodebuild could not compile ios-search-ads-sample for the simulator: " + result.stdout.strip(),
+                "xcodebuild could not compile ios-search-ads-sample for the device SDK: " + result.stdout.strip(),
                 failures)
     else:
         print("xcodebuild unavailable; static iOS baseline only.")

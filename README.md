@@ -75,9 +75,11 @@ stay available while preserving the single source of truth.
 The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 
 The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is
-available, the baseline also compiles an unsigned Debug build for the iOS
-Simulator. It does not launch the app, call ADClient, inspect attribution
+available, the baseline also compiles and links an unsigned Debug build against
+the iOS device SDK. It does not launch the app, call ADClient, inspect attribution
 responses, or claim that the deprecated iAd API works on current iOS releases.
+The device SDK is intentional because current arm64 simulator frameworks expose
+the deprecated iAd module but do not provide the `ADClient` implementation.
 
 For runtime verification on macOS, launch the sample on a compatible device or
 simulator and exercise the explicit attribution button without retaining the

@@ -37,7 +37,7 @@ Helpful reports include:
 - Accessibility announcements should stay aligned with those user-triggered
   state changes.
 - The pinned macOS workflow uses read-only repository permissions and compiles
-  an unsigned simulator build without launching ADClient or handling
+  an unsigned device-SDK build without launching ADClient or handling
   attribution payloads.
 
 ## Mobile Privacy Notes

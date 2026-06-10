@@ -34,8 +34,8 @@ Priority:
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
 - Keep the project on Swift 5 with the oldest deployment target supported by
-  the hosted Xcode simulator SDK
-- Keep pinned macOS CI compiling an unsigned simulator build through the
+  the hosted Xcode SDK
+- Keep pinned macOS CI compiling an unsigned device-SDK build through the
   canonical `make check` gate
 
 Next priorities:
@@ -73,9 +73,10 @@ requesting, completed, and retry states through the centralized button state
 helper.
 Accessibility announcements should describe user-triggered attribution state
 changes for requesting, completed, and retry states.
-On macOS, the baseline should compile an unsigned simulator build without
-launching the app or invoking ADClient. A successful build does not prove that
-the deprecated service still works.
+On macOS, the baseline should compile and link an unsigned device-SDK build
+without launching the app or invoking ADClient. The device SDK is required
+because current arm64 simulator frameworks omit the deprecated ADClient
+implementation. A successful build does not prove that the service still works.
 
 ## What We Will Not Merge (For Now)
 
