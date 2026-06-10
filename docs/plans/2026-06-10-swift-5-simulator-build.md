@@ -13,8 +13,10 @@ application source.
 
 - Updated both target configurations from Swift 3 to Swift 5.
 - Updated the app delegate launch-options signature for Swift 5.
-- Preserved the documented iOS 10 deployment target and legacy ADClient sample
-  behavior.
+- Raised the deployment target from iOS 10 to iOS 12, the minimum accepted by
+  the hosted Xcode 16.4 simulator SDK, while preserving legacy ADClient behavior.
+- Replaced the obsolete global accessibility announcement API with
+  `UIAccessibility.post`.
 - Upgraded Xcode-enabled `make check` runs to compile an unsigned Debug build
   for the iOS Simulator without launching the app or requesting attribution.
 - Extended the static baseline and project documentation to preserve the build

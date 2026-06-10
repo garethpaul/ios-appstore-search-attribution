@@ -72,7 +72,7 @@ The `lint`, `test`, and `build` targets intentionally alias the canonical baseli
 on hosts without Xcode, so the standard local gate commands
 stay available while preserving the single source of truth.
 
-The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 10 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
+The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 
 The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is
 available, the baseline also compiles an unsigned Debug build for the iOS

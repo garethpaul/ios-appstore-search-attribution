@@ -63,7 +63,7 @@ class ViewController: UIViewController {
         }
 
         if announce {
-            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, attributionButton.accessibilityLabel)
+            UIAccessibility.post(notification: .announcement, argument: attributionButton.accessibilityLabel)
         }
     }
 

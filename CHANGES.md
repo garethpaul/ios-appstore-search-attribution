@@ -3,6 +3,10 @@
 ## 2026-06-10
 
 - Migrated the project setting and app launch signature from Swift 3 to Swift 5.
+- Replaced the obsolete global accessibility announcement API with the Swift 5
+  `UIAccessibility.post` API.
+- Raised the deployment target from iOS 10 to iOS 12, the minimum supported by
+  the hosted Xcode 16.4 simulator SDK.
 - Upgraded Xcode-enabled validation from project parsing to an unsigned iOS
   Simulator build.
 - Added pinned, read-only macOS CI for the canonical `make check` baseline.

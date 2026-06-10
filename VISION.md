@@ -33,8 +33,8 @@ Priority:
   Swift/Xcode metadata, source inventory, and privacy guardrails
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
-- Keep the project on Swift 5 while preserving its documented iOS 10 sample
-  deployment context
+- Keep the project on Swift 5 with the oldest deployment target supported by
+  the hosted Xcode simulator SDK
 - Keep pinned macOS CI compiling an unsigned simulator build through the
   canonical `make check` gate
 
@@ -63,7 +63,7 @@ store, or transmit attribution data beyond the sample's explicit purpose.
 
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
 `scripts/check-baseline.py` without Xcode. It verifies the ADClient request
-flow, Swift 5/iOS 10 project context, plist/storyboard XML, source inventory,
+flow, Swift 5/iOS 12 project context, plist/storyboard XML, source inventory,
 and local-only attribution guardrails. It also verifies that attribution remains
 behind an explicit user action, is not requested from app launch or view-load
 code, shows an in-flight disabled button title, keeps the completed state

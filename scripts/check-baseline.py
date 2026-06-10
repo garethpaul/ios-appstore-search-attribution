@@ -158,8 +158,9 @@ def main():
             "Info.plist must keep storyboard configuration",
             failures)
     require(project.count("SWIFT_VERSION = 5.0") == 2 and "SWIFT_VERSION = 3.0" not in project and
-            "IPHONEOS_DEPLOYMENT_TARGET = 10.0" in project,
-            "Xcode project must use Swift 5 while preserving the iOS 10 deployment context",
+            project.count("IPHONEOS_DEPLOYMENT_TARGET = 12.0") == 2 and
+            "IPHONEOS_DEPLOYMENT_TARGET = 10.0" not in project,
+            "Xcode project must use Swift 5 with the iOS 12 deployment target",
             failures)
     require("[UIApplication.LaunchOptionsKey: Any]?" in active_app_delegate,
             "AppDelegate must use the Swift 5 launch-options signature",
@@ -211,7 +212,7 @@ def main():
                 f"ViewController must keep state-specific accessibility text: {accessibility_text}",
                 failures)
     require("func applyAttributionButtonState(_ state: AttributionButtonState, announce: Bool = false)" in active_view_controller and
-            "UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, attributionButton.accessibilityLabel)" in button_state_helper,
+            "UIAccessibility.post(notification: .announcement, argument: attributionButton.accessibilityLabel)" in button_state_helper,
             "ViewController must announce attribution state changes to assistive technologies",
             failures)
     require(request_action.count("announce: true") >= 3 and "applyAttributionButtonState(.ready)" in configure_button,
