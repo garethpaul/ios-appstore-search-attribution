@@ -3,6 +3,7 @@ from pathlib import Path
 import plistlib
 import re
 import shutil
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
@@ -18,6 +19,7 @@ ACCESSIBILITY_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-aff
 ACCESSIBILITY_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-state.md"
 BUTTON_STATE_HELPER_PLAN = ROOT / "docs/plans/2026-06-09-attribution-button-state-helper.md"
 ACCESSIBILITY_ANNOUNCEMENT_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-announcements.md"
+HOSTED_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-10-hosted-project-validation.md"
 
 
 def require(condition, message, failures):
@@ -74,6 +76,7 @@ def main():
     failures = []
     required_files = [
         ".gitignore",
+        ".github/workflows/check.yml",
         "CHANGES.md",
         "Makefile",
         "README.md",
@@ -97,6 +100,7 @@ def main():
         "docs/plans/2026-06-09-attribution-accessibility-state.md",
         "docs/plans/2026-06-09-attribution-button-state-helper.md",
         "docs/plans/2026-06-09-attribution-accessibility-announcements.md",
+        "docs/plans/2026-06-10-hosted-project-validation.md",
     ]
 
     for relative_path in required_files:
@@ -132,6 +136,8 @@ def main():
     accessibility_state_plan = ACCESSIBILITY_STATE_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_STATE_PLAN.exists() else ""
     button_state_helper_plan = BUTTON_STATE_HELPER_PLAN.read_text(encoding="utf-8") if BUTTON_STATE_HELPER_PLAN.exists() else ""
     accessibility_announcement_plan = ACCESSIBILITY_ANNOUNCEMENT_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_ANNOUNCEMENT_PLAN.exists() else ""
+    hosted_validation_plan = HOSTED_VALIDATION_PLAN.read_text(encoding="utf-8") if HOSTED_VALIDATION_PLAN.exists() else ""
+    workflow = read(".github/workflows/check.yml")
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
@@ -300,9 +306,32 @@ def main():
     require("status: completed" in accessibility_announcement_plan,
             "attribution accessibility announcements plan must be marked completed",
             failures)
+    require("status: completed" in hosted_validation_plan and "make check" in hosted_validation_plan,
+            "hosted project validation plan must be completed and document make check",
+            failures)
+    require("permissions:\n  contents: read" in workflow,
+            "Check workflow must use read-only repository permissions",
+            failures)
+    require("cancel-in-progress: true" in workflow and "runs-on: macos-15" in workflow and
+            "timeout-minutes: 10" in workflow,
+            "Check workflow must bound duplicate and long-running macOS jobs",
+            failures)
+    require("actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
+            "run: make check" in workflow,
+            "Check workflow must pin checkout and run the canonical baseline",
+            failures)
 
     if shutil.which("xcodebuild"):
-        print("xcodebuild is available; run a scheme-specific Xcode test on macOS before release.")
+        result = subprocess.run(
+            ["xcodebuild", "-list", "-project", "ios-search-ads-sample.xcodeproj"],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        require(result.returncode == 0,
+                "xcodebuild could not parse ios-search-ads-sample.xcodeproj: " + result.stderr.strip(),
+                failures)
     else:
         print("xcodebuild unavailable; static iOS baseline only.")
 

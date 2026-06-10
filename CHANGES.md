@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-10
+
+- Added pinned, read-only macOS CI for the canonical `make check` baseline.
+- Made Xcode-enabled checks parse the sample project without invoking ADClient
+  or handling attribution responses.
+
 ## 2026-06-09
 
 - Added accessibility announcements for user-triggered attribution state changes.

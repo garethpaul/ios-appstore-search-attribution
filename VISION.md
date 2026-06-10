@@ -33,6 +33,8 @@ Priority:
   Swift/Xcode metadata, source inventory, and privacy guardrails
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
+- Keep pinned macOS CI parsing the Xcode project through the canonical
+  `make check` gate
 
 Next priorities:
 
@@ -68,6 +70,8 @@ requesting, completed, and retry states through the centralized button state
 helper.
 Accessibility announcements should describe user-triggered attribution state
 changes for requesting, completed, and retry states.
+On macOS, the baseline should parse the Xcode project without invoking ADClient
+or treating a project parse as proof that the deprecated service still works.
 
 ## What We Will Not Merge (For Now)
 
