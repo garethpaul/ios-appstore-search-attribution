@@ -33,13 +33,16 @@ Priority:
   Swift/Xcode metadata, source inventory, and privacy guardrails
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
-- Keep pinned macOS CI parsing the Xcode project through the canonical
-  `make check` gate
+- Keep the project on Swift 5 while preserving its documented iOS 10 sample
+  deployment context
+- Keep pinned macOS CI compiling an unsigned simulator build through the
+  canonical `make check` gate
 
 Next priorities:
 
 - Add manual verification steps for attribution response handling
-- Modernize Swift/project settings in a dedicated pass
+- Evaluate migration from deprecated ADClient separately from build-toolchain
+  maintenance
 - Document privacy expectations for attribution data
 
 Contribution rules:
@@ -60,7 +63,7 @@ store, or transmit attribution data beyond the sample's explicit purpose.
 
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
 `scripts/check-baseline.py` without Xcode. It verifies the ADClient request
-flow, Swift 3/iOS 10 project context, plist/storyboard XML, source inventory,
+flow, Swift 5/iOS 10 project context, plist/storyboard XML, source inventory,
 and local-only attribution guardrails. It also verifies that attribution remains
 behind an explicit user action, is not requested from app launch or view-load
 code, shows an in-flight disabled button title, keeps the completed state
@@ -70,8 +73,9 @@ requesting, completed, and retry states through the centralized button state
 helper.
 Accessibility announcements should describe user-triggered attribution state
 changes for requesting, completed, and retry states.
-On macOS, the baseline should parse the Xcode project without invoking ADClient
-or treating a project parse as proof that the deprecated service still works.
+On macOS, the baseline should compile an unsigned simulator build without
+launching the app or invoking ADClient. A successful build does not prove that
+the deprecated service still works.
 
 ## What We Will Not Merge (For Now)
 

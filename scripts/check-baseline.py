@@ -20,6 +20,7 @@ ACCESSIBILITY_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibili
 BUTTON_STATE_HELPER_PLAN = ROOT / "docs/plans/2026-06-09-attribution-button-state-helper.md"
 ACCESSIBILITY_ANNOUNCEMENT_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-announcements.md"
 HOSTED_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-10-hosted-project-validation.md"
+SWIFT_5_BUILD_PLAN = ROOT / "docs/plans/2026-06-10-swift-5-simulator-build.md"
 
 
 def require(condition, message, failures):
@@ -101,6 +102,7 @@ def main():
         "docs/plans/2026-06-09-attribution-button-state-helper.md",
         "docs/plans/2026-06-09-attribution-accessibility-announcements.md",
         "docs/plans/2026-06-10-hosted-project-validation.md",
+        "docs/plans/2026-06-10-swift-5-simulator-build.md",
     ]
 
     for relative_path in required_files:
@@ -137,6 +139,7 @@ def main():
     button_state_helper_plan = BUTTON_STATE_HELPER_PLAN.read_text(encoding="utf-8") if BUTTON_STATE_HELPER_PLAN.exists() else ""
     accessibility_announcement_plan = ACCESSIBILITY_ANNOUNCEMENT_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_ANNOUNCEMENT_PLAN.exists() else ""
     hosted_validation_plan = HOSTED_VALIDATION_PLAN.read_text(encoding="utf-8") if HOSTED_VALIDATION_PLAN.exists() else ""
+    swift_5_build_plan = SWIFT_5_BUILD_PLAN.read_text(encoding="utf-8") if SWIFT_5_BUILD_PLAN.exists() else ""
     workflow = read(".github/workflows/check.yml")
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
@@ -154,8 +157,12 @@ def main():
     require(app_plist.get("UILaunchStoryboardName") == "LaunchScreen" and app_plist.get("UIMainStoryboardFile") == "Main",
             "Info.plist must keep storyboard configuration",
             failures)
-    require("SWIFT_VERSION = 3.0" in project and "IPHONEOS_DEPLOYMENT_TARGET = 10.0" in project,
-            "Xcode project must keep the Swift 3 / iOS 10 sample context",
+    require(project.count("SWIFT_VERSION = 5.0") == 2 and "SWIFT_VERSION = 3.0" not in project and
+            "IPHONEOS_DEPLOYMENT_TARGET = 10.0" in project,
+            "Xcode project must use Swift 5 while preserving the iOS 10 deployment context",
+            failures)
+    require("[UIApplication.LaunchOptionsKey: Any]?" in active_app_delegate,
+            "AppDelegate must use the Swift 5 launch-options signature",
             failures)
     require("ios-search-ads-sample/Info.plist" in project and "AppDelegate.swift in Sources" in project,
             "Xcode project must keep app plist and Swift source wiring",
@@ -309,6 +316,9 @@ def main():
     require("status: completed" in hosted_validation_plan and "make check" in hosted_validation_plan,
             "hosted project validation plan must be completed and document make check",
             failures)
+    require("status: completed" in swift_5_build_plan and "simulator" in swift_5_build_plan.lower(),
+            "Swift 5 simulator build plan must be completed and document simulator verification",
+            failures)
     require("permissions:\n  contents: read" in workflow,
             "Check workflow must use read-only repository permissions",
             failures)
@@ -323,14 +333,22 @@ def main():
 
     if shutil.which("xcodebuild"):
         result = subprocess.run(
-            ["xcodebuild", "-list", "-project", "ios-search-ads-sample.xcodeproj"],
+            [
+                "xcodebuild",
+                "-project", "ios-search-ads-sample.xcodeproj",
+                "-target", "ios-search-ads-sample",
+                "-configuration", "Debug",
+                "-sdk", "iphonesimulator",
+                "CODE_SIGNING_ALLOWED=NO",
+                "build",
+            ],
             cwd=ROOT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
         )
         require(result.returncode == 0,
-                "xcodebuild could not parse ios-search-ads-sample.xcodeproj: " + result.stderr.strip(),
+                "xcodebuild could not compile ios-search-ads-sample for the simulator: " + result.stdout.strip(),
                 failures)
     else:
         print("xcodebuild unavailable; static iOS baseline only.")
