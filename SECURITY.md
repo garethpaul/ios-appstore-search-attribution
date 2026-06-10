@@ -34,6 +34,8 @@ Helpful reports include:
   completed, and retry attribution states through the centralized button state
   helper so assistive technology users receive the same privacy and control
   signals.
+- Accessibility announcements should stay aligned with those user-triggered
+  state changes.
 
 ## Mobile Privacy Notes
 

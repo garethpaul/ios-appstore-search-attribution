@@ -2,6 +2,7 @@
 
 ## 2026-06-09
 
+- Added accessibility announcements for user-triggered attribution state changes.
 - Added local `make lint`, `make test`, and `make build` gate aliases for the
   static attribution baseline.
 - Added state-specific accessibility text for requesting, completed, and retry

@@ -38,7 +38,7 @@ class ViewController: UIViewController {
         ])
     }
 
-    private func applyAttributionButtonState(_ state: AttributionButtonState) {
+    private func applyAttributionButtonState(_ state: AttributionButtonState, announce: Bool = false) {
         switch state {
         case .ready:
             attributionButton.setTitle("Request Attribution", for: .normal)
@@ -61,6 +61,10 @@ class ViewController: UIViewController {
             attributionButton.accessibilityHint = "Attribution request completed locally and the button is disabled"
             attributionButton.isEnabled = false
         }
+
+        if announce {
+            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, attributionButton.accessibilityLabel)
+        }
     }
 
     @objc private func requestAttribution(_: UIButton) {
@@ -69,7 +73,7 @@ class ViewController: UIViewController {
         }
 
         attributionRequestInProgress = true
-        applyAttributionButtonState(.requesting)
+        applyAttributionButtonState(.requesting, announce: true)
 
         ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in
             DispatchQueue.main.async { [weak self] in
@@ -79,7 +83,7 @@ class ViewController: UIViewController {
 
                 strongSelf.attributionRequestInProgress = false
                 if error != nil {
-                    strongSelf.applyAttributionButtonState(.retry)
+                    strongSelf.applyAttributionButtonState(.retry, announce: true)
                     return
                 }
 
@@ -91,7 +95,7 @@ class ViewController: UIViewController {
                 }
 
                 strongSelf.attributionRequestCompleted = true
-                strongSelf.applyAttributionButtonState(.completed)
+                strongSelf.applyAttributionButtonState(.completed, announce: true)
             }
         }
     }

@@ -24,6 +24,8 @@ Priority:
 - Show a clear in-flight button state while attribution is being requested
 - Keep attribution completion UI state changes on the main queue
 - Keep attribution button state-specific accessibility text aligned with local-only behavior
+- Keep accessibility announcements aligned with user-triggered attribution state
+  changes
 - Keep the centralized button state helper as the source of truth for attribution
   titles, enabled state, and accessibility text
 - Maintain the small sample project structure
@@ -64,6 +66,8 @@ disabled, and updates completion UI state on the main queue. State-specific
 accessibility text should describe the local-only attribution action across
 requesting, completed, and retry states through the centralized button state
 helper.
+Accessibility announcements should describe user-triggered attribution state
+changes for requesting, completed, and retry states.
 
 ## What We Will Not Merge (For Now)
 
