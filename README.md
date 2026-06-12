@@ -73,6 +73,8 @@ on hosts without Xcode, so the standard local gate commands
 stay available while preserving the single source of truth.
 
 The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
+Request generations reject a stale completion from an earlier retry or a
+duplicate terminal result before it can overwrite the active button state.
 
 The pinned, credential-free GitHub Actions check sets up Python 3.12 and runs
 `make check` on `macos-15`. The baseline parses the project and type-checks both
@@ -102,6 +104,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
   local-only privacy boundary through the centralized button state helper.
 - Keep accessibility announcements aligned with user-triggered attribution state
   changes.
+- Keep attribution completion generation-guarded across retries.
 
 ## Maintenance Notes
 

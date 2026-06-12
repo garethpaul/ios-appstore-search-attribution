@@ -23,6 +23,7 @@ ACCESSIBILITY_ANNOUNCEMENT_PLAN = ROOT / "docs/plans/2026-06-09-attribution-acce
 CI_PLAN = ROOT / "docs/plans/2026-06-10-ci-baseline.md"
 HOSTED_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-10-hosted-project-validation.md"
 SWIFT_5_BUILD_PLAN = ROOT / "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md"
+STALE_COMPLETION_PLAN = ROOT / "docs/plans/2026-06-12-stale-attribution-completion-guard.md"
 
 
 def require(condition, message, failures):
@@ -138,6 +139,7 @@ def main():
         "docs/plans/2026-06-10-ci-baseline.md",
         "docs/plans/2026-06-10-hosted-project-validation.md",
         "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md",
+        "docs/plans/2026-06-12-stale-attribution-completion-guard.md",
     ]
 
     for relative_path in required_files:
@@ -178,6 +180,7 @@ def main():
     ci_plan = CI_PLAN.read_text(encoding="utf-8") if CI_PLAN.exists() else ""
     hosted_validation_plan = HOSTED_VALIDATION_PLAN.read_text(encoding="utf-8") if HOSTED_VALIDATION_PLAN.exists() else ""
     swift_5_build_plan = SWIFT_5_BUILD_PLAN.read_text(encoding="utf-8") if SWIFT_5_BUILD_PLAN.exists() else ""
+    stale_completion_plan = STALE_COMPLETION_PLAN.read_text(encoding="utf-8") if STALE_COMPLETION_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
@@ -264,6 +267,15 @@ def main():
             "attributionRequestInProgress || attributionRequestCompleted" in request_action,
             "ViewController must guard duplicate attribution requests",
             failures)
+    require("private var attributionRequestGeneration = 0" in active_view_controller and
+            "attributionRequestGeneration += 1" in request_action and
+            "let requestGeneration = attributionRequestGeneration" in request_action,
+            "Each attribution request must capture a new generation",
+            failures)
+    require("requestGeneration == strongSelf.attributionRequestGeneration" in request_action and
+            "strongSelf.attributionRequestInProgress else" in request_action,
+            "Attribution completions must ignore stale generations and duplicate results",
+            failures)
     require("attributionButton.isEnabled = false" in button_state_helper and
             "attributionButton.isEnabled = true" in button_state_helper and
             "attributionRequestCompleted = true" in request_action,
@@ -319,18 +331,18 @@ def main():
             "Makefile must expose lint, test, and build aliases for the local baseline",
             failures)
     require("make lint" in readme and "make test" in readme and "make build" in readme and "make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
-            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower() and "accessibility announcements" in readme.lower() and "centralized button state" in readme.lower() and "GitHub Actions" in readme,
+            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower() and "accessibility announcements" in readme.lower() and "centralized button state" in readme.lower() and "stale completion" in readme.lower() and "GitHub Actions" in readme,
             "README must document static verification and local-only, user-triggered ADClient handling",
             failures)
     require("scripts/check-baseline.py" in vision and "make lint" in vision and "make test" in vision and "make build" in vision and "local-only" in vision.lower() and
-            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower() and "accessibility announcements" in vision.lower() and "centralized button state" in vision.lower() and "GitHub Actions" in vision,
+            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower() and "accessibility announcements" in vision.lower() and "centralized button state" in vision.lower() and "stale completion" in vision.lower() and "GitHub Actions" in vision,
             "VISION must describe the current static privacy baseline",
             failures)
-    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower() and "accessibility announcements" in security.lower() and "centralized button state" in security.lower() and "GitHub Actions" in security,
+    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower() and "accessibility announcements" in security.lower() and "centralized button state" in security.lower() and "stale completion" in security.lower() and "GitHub Actions" in security,
             "SECURITY must document attribution privacy and the static baseline",
             failures)
     require("debug logging" in changes and "segment" in changes and "make check" in changes and "make lint" in changes and "make test" in changes and "make build" in changes and
-            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower() and "accessibility announcements" in changes.lower() and "centralized button state" in changes.lower() and "GitHub Actions" in changes,
+            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower() and "accessibility announcements" in changes.lower() and "centralized button state" in changes.lower() and "stale completion" in changes.lower() and "GitHub Actions" in changes,
             "CHANGES must record logging, segment, user-triggered attribution, in-flight UI, main-queue completion, and baseline updates",
             failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
@@ -365,6 +377,9 @@ def main():
             failures)
     require("status: completed" in swift_5_build_plan and "device sdk" in swift_5_build_plan.lower(),
             "Swift 5 build plan must be completed and document device SDK verification",
+            failures)
+    require("status: completed" in stale_completion_plan and "mutations" in stale_completion_plan.lower(),
+            "stale attribution completion plan must record completed mutation verification",
             failures)
     require(workflow.count("permissions:\n  contents: read") == 1 and
             not re.search(r"(?m)^\s{2,}permissions:\s*$", workflow) and

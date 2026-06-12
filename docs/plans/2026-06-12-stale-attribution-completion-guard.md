@@ -1,6 +1,6 @@
 # Stale Attribution Completion Guard
 
-status: planned
+status: completed
 
 ## Context
 
@@ -9,7 +9,7 @@ re-enables the button, a retry can begin while delayed or duplicate completion
 work from the previous request is still queued on the main thread. That stale
 work can mark the retry complete or switch its button back to the retry state.
 
-## Scope
+## Completed Scope
 
 - Assign a monotonically increasing generation to each attribution request.
 - Capture the generation in the completion and accept it only while that same

@@ -20,6 +20,7 @@ class ViewController: UIViewController {
     private let attributionButton = UIButton(type: .system)
     private var attributionRequestInProgress = false
     private var attributionRequestCompleted = false
+    private var attributionRequestGeneration = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,11 +74,17 @@ class ViewController: UIViewController {
         }
 
         attributionRequestInProgress = true
+        attributionRequestGeneration += 1
+        let requestGeneration = attributionRequestGeneration
         applyAttributionButtonState(.requesting, announce: true)
 
         ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in
             DispatchQueue.main.async { [weak self] in
                 guard let strongSelf = self else {
+                    return
+                }
+                guard requestGeneration == strongSelf.attributionRequestGeneration,
+                      strongSelf.attributionRequestInProgress else {
                     return
                 }
 
