@@ -74,14 +74,14 @@ stay available while preserving the single source of truth.
 
 The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 
-The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is
-available, the baseline also parses the project and type-checks both Swift
-sources against the current iOS device SDK. It does not launch the app, call
-ADClient, inspect attribution responses, or claim that the deprecated iAd API
-works on current iOS releases. Current iOS SDKs expose the deprecated iAd module
-for compilation but no longer provide the `ADClient` implementation needed to
-link an executable, so runtime/link verification requires an older compatible
-SDK or a separate migration to AdServices.
+The pinned, credential-free GitHub Actions check sets up Python 3.12 and runs
+`make check` on `macos-15`. The baseline parses the project and type-checks both
+Swift sources against the current iOS device SDK. It does not launch the app,
+call ADClient, inspect attribution responses, or claim that the deprecated iAd
+API works on current iOS releases. Current iOS SDKs expose the deprecated iAd
+module for compilation but no longer provide the `ADClient` implementation
+needed to link an executable, so runtime/link verification requires an older
+compatible SDK or a separate migration to AdServices.
 
 For runtime verification on macOS, launch the sample on a compatible device or
 simulator and exercise the explicit attribution button without retaining the
@@ -115,6 +115,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   attribution state accessibility announcements.
 - See `docs/plans/2026-06-09-attribution-button-state-helper.md` for the centralized button state guardrail.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
+- See `docs/plans/2026-06-10-hosted-project-validation.md` for hosted project validation.
+- See `docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md` for device-SDK type-checking.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, plist/storyboard files, project metadata, or attribution behavior.
 
 ## Contributing

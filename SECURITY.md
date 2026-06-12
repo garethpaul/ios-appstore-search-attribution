@@ -30,15 +30,17 @@ Helpful reports include:
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
 - Attribution responses can include sensitive device and campaign context. The sample should keep attribution response handling local-only and user-triggered, and should not log, store, upload, or add segment behavior without explicit consent and data-flow documentation.
 - `make check` runs a static baseline that guards plist/storyboard metadata, Swift source inventory, launch-time attribution requests, duplicate request handling, centralized button state handling, in-flight button state, completed state UI, state-specific accessibility text for the local-only attribution action, ADClient response handling, and attribution logging/network/segment regressions when Xcode is unavailable.
+- GitHub Actions runs the static `make check` baseline before review.
 - State-specific accessibility text should stay aligned with requesting,
   completed, and retry attribution states through the centralized button state
   helper so assistive technology users receive the same privacy and control
   signals.
 - Accessibility announcements should stay aligned with those user-triggered
   state changes.
-- The pinned macOS workflow uses read-only repository permissions, parses the
-  project, and type-checks its Swift sources against the device SDK without
-  launching ADClient or handling attribution payloads.
+- The pinned macOS workflow uses Python 3.12, read-only repository permissions,
+  and disabled checkout credential persistence. It parses the project and
+  type-checks its Swift sources against the device SDK without launching
+  ADClient or handling attribution payloads.
 
 ## Mobile Privacy Notes
 

@@ -11,7 +11,10 @@
 - Upgraded Xcode-enabled validation to parse the project and type-check both
   Swift sources against the iOS device SDK. Current iOS SDKs no longer provide
   a linkable ADClient implementation.
-- Added pinned, read-only macOS CI for the canonical `make check` baseline.
+- Added pinned, read-only macOS GitHub Actions CI for the canonical `make check`
+  baseline.
+- Pinned Python 3.12 setup, disabled checkout credential persistence, and added
+  a static guard requiring the CI workflow and completed CI plans to remain.
 - Kept hosted validation from launching ADClient or handling attribution
   responses.
 

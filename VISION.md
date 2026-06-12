@@ -35,8 +35,8 @@ Priority:
   local verification gates
 - Keep the project on Swift 5 with the oldest deployment target supported by
   the hosted Xcode SDK
-- Keep pinned macOS CI parsing the project and type-checking Swift against the
-  device SDK through the
+- Keep pinned, credential-free macOS GitHub Actions CI on Python 3.12, parsing
+  the project and type-checking Swift against the device SDK through the
   canonical `make check` gate
 
 Next priorities:
@@ -51,6 +51,8 @@ Contribution rules:
 - One PR = one focused attribution, build, or documentation change.
 - Verify behavior on a compatible iOS environment when changing the request.
 - Keep signing files and generated build products out of git.
+- Keep `.github/workflows/check.yml` aligned with the static attribution,
+  project parsing, and device-SDK type-checking baseline.
 - Document any data storage or logging change.
 
 ## Security And Privacy

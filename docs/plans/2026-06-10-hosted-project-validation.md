@@ -10,7 +10,9 @@ was installed. The repository had no current hosted project-file validation.
 
 ## Completed Scope
 
-- Added a pinned GitHub Actions workflow with read-only repository permissions.
+- Added a pinned GitHub Actions workflow with read-only repository permissions
+  and disabled checkout credential persistence.
+- Pinned Python 3.12 setup for the canonical checker.
 - Runs the canonical `make check` gate on a bounded `macos-15` job.
 - Parses `ios-search-ads-sample.xcodeproj` whenever Xcode is available.
 - Kept ADClient calls and attribution response handling outside hosted CI.
