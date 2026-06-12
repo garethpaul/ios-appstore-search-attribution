@@ -35,6 +35,14 @@ def read(relative_path):
     return (ROOT / relative_path).read_text(encoding="utf-8", errors="replace")
 
 
+def markdown_section(text, heading):
+    match = re.search(
+        rf"(?ms)^## {re.escape(heading)}\s*$\n(.*?)(?=^## |\Z)",
+        text,
+    )
+    return match.group(1).strip() if match else ""
+
+
 def strip_swift_line_comments(text):
     return "\n".join(line.split("//", 1)[0] for line in text.splitlines())
 
@@ -378,9 +386,39 @@ def main():
     require("status: completed" in swift_5_build_plan and "device sdk" in swift_5_build_plan.lower(),
             "Swift 5 build plan must be completed and document device SDK verification",
             failures)
-    require("status: completed" in stale_completion_plan and "mutations" in stale_completion_plan.lower(),
-            "stale attribution completion plan must record completed mutation verification",
+    stale_completion_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", stale_completion_plan
+    )
+    stale_completion_work = markdown_section(stale_completion_plan, "Work Completed")
+    stale_completion_verification = markdown_section(
+        stale_completion_plan, "Verification Completed"
+    )
+    require(stale_completion_status == ["completed"] and stale_completion_work,
+            "stale attribution completion plan must record one completed status and completed work",
             failures)
+    require(stale_completion_verification and
+            not re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", stale_completion_verification),
+            "stale attribution completion plan must record finished verification without pending markers",
+            failures)
+    for evidence in [
+        "make check",
+        "make lint",
+        "make test",
+        "make build",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "git diff --check",
+        "27394447779",
+        "27394453676",
+        "27394475807",
+        "27402322779",
+        "fb6e802113e5afc388123c0f66260a4965e573f9",
+        "680f82901bd475b9ec441b41ee10c6f493975e51",
+        "requestGeneration == strongSelf.attributionRequestGeneration",
+        "strongSelf.attributionRequestInProgress else",
+    ]:
+        require(evidence in stale_completion_verification,
+                f"stale attribution completion plan must preserve verification evidence: {evidence}",
+                failures)
     require(workflow.count("permissions:\n  contents: read") == 1 and
             not re.search(r"(?m)^\s{2,}permissions:\s*$", workflow) and
             not re.search(r"(?m)^\s+[A-Za-z0-9_-]+:\s*write\s*$", workflow),
