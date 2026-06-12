@@ -18,6 +18,7 @@ ACCESSIBILITY_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-aff
 ACCESSIBILITY_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-state.md"
 BUTTON_STATE_HELPER_PLAN = ROOT / "docs/plans/2026-06-09-attribution-button-state-helper.md"
 ACCESSIBILITY_ANNOUNCEMENT_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-announcements.md"
+CI_PLAN = ROOT / "docs/plans/2026-06-10-ci-baseline.md"
 
 
 def require(condition, message, failures):
@@ -79,6 +80,7 @@ def main():
         "README.md",
         "SECURITY.md",
         "VISION.md",
+        ".github/workflows/check.yml",
         "ios-search-ads-sample.xcodeproj/project.pbxproj",
         "ios-search-ads-sample.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
         "ios-search-ads-sample/Info.plist",
@@ -97,6 +99,7 @@ def main():
         "docs/plans/2026-06-09-attribution-accessibility-state.md",
         "docs/plans/2026-06-09-attribution-button-state-helper.md",
         "docs/plans/2026-06-09-attribution-accessibility-announcements.md",
+        "docs/plans/2026-06-10-ci-baseline.md",
     ]
 
     for relative_path in required_files:
@@ -122,6 +125,7 @@ def main():
     changes = read("CHANGES.md")
     gitignore = read(".gitignore")
     makefile = read("Makefile")
+    workflow = read(".github/workflows/check.yml")
     baseline_plan = BASELINE_PLAN.read_text(encoding="utf-8") if BASELINE_PLAN.exists() else ""
     make_gates_plan = MAKE_GATES_PLAN.read_text(encoding="utf-8") if MAKE_GATES_PLAN.exists() else ""
     explicit_request_plan = EXPLICIT_REQUEST_PLAN.read_text(encoding="utf-8") if EXPLICIT_REQUEST_PLAN.exists() else ""
@@ -132,6 +136,7 @@ def main():
     accessibility_state_plan = ACCESSIBILITY_STATE_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_STATE_PLAN.exists() else ""
     button_state_helper_plan = BUTTON_STATE_HELPER_PLAN.read_text(encoding="utf-8") if BUTTON_STATE_HELPER_PLAN.exists() else ""
     accessibility_announcement_plan = ACCESSIBILITY_ANNOUNCEMENT_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_ANNOUNCEMENT_PLAN.exists() else ""
+    ci_plan = CI_PLAN.read_text(encoding="utf-8") if CI_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
@@ -264,19 +269,22 @@ def main():
             "Makefile must expose lint, test, and build aliases for the local baseline",
             failures)
     require("make lint" in readme and "make test" in readme and "make build" in readme and "make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
-            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower() and "accessibility announcements" in readme.lower() and "centralized button state" in readme.lower(),
+            "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower() and "accessibility announcements" in readme.lower() and "centralized button state" in readme.lower() and "GitHub Actions" in readme,
             "README must document static verification and local-only, user-triggered ADClient handling",
             failures)
     require("scripts/check-baseline.py" in vision and "make lint" in vision and "make test" in vision and "make build" in vision and "local-only" in vision.lower() and
-            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower() and "accessibility announcements" in vision.lower() and "centralized button state" in vision.lower(),
+            "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower() and "accessibility announcements" in vision.lower() and "centralized button state" in vision.lower() and "GitHub Actions" in vision,
             "VISION must describe the current static privacy baseline",
             failures)
-    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower() and "accessibility announcements" in security.lower() and "centralized button state" in security.lower(),
+    require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower() and "accessibility announcements" in security.lower() and "centralized button state" in security.lower() and "GitHub Actions" in security,
             "SECURITY must document attribution privacy and the static baseline",
             failures)
     require("debug logging" in changes and "segment" in changes and "make check" in changes and "make lint" in changes and "make test" in changes and "make build" in changes and
-            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower() and "accessibility announcements" in changes.lower() and "centralized button state" in changes.lower(),
+            "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower() and "accessibility announcements" in changes.lower() and "centralized button state" in changes.lower() and "GitHub Actions" in changes,
             "CHANGES must record logging, segment, user-triggered attribution, in-flight UI, main-queue completion, and baseline updates",
+            failures)
+    require("uses: actions/checkout@v4" in workflow and "uses: actions/setup-python@v5" in workflow and "run: make check" in workflow,
+            "GitHub Actions workflow must set up Python and run make check",
             failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
             "status: completed" in main_thread_plan and "status: completed" in in_flight_plan,
@@ -299,6 +307,9 @@ def main():
             failures)
     require("status: completed" in accessibility_announcement_plan,
             "attribution accessibility announcements plan must be marked completed",
+            failures)
+    require("Status: Completed" in ci_plan and "make check" in ci_plan,
+            "CI baseline plan must record completed status and make check verification",
             failures)
 
     if shutil.which("xcodebuild"):

@@ -33,6 +33,7 @@ Priority:
   Swift/Xcode metadata, source inventory, and privacy guardrails
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
+- Keep GitHub Actions running the static `make check` baseline before review
 
 Next priorities:
 
@@ -45,6 +46,8 @@ Contribution rules:
 - One PR = one focused attribution, build, or documentation change.
 - Verify behavior on a compatible iOS environment when changing the request.
 - Keep signing files and generated build products out of git.
+- Keep `.github/workflows/check.yml` aligned with the static attribution
+  baseline until a macOS/Xcode job is documented.
 - Document any data storage or logging change.
 
 ## Security And Privacy

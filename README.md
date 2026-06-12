@@ -68,6 +68,9 @@ make build
 make check
 ```
 
+GitHub Actions runs `make check` through `.github/workflows/check.yml` on
+pushes, pull requests, and manual dispatches.
+
 The `lint`, `test`, and `build` targets intentionally alias the static baseline
 on hosts without the legacy Xcode toolchain, so the standard local gate commands
 stay available while preserving the single source of truth.
@@ -104,6 +107,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
   attribution state accessibility announcements.
 - See `docs/plans/2026-06-09-attribution-button-state-helper.md` for the centralized button state guardrail.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, plist/storyboard files, project metadata, or attribution behavior.
 
 ## Contributing
