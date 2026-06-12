@@ -17,6 +17,8 @@
   a static guard requiring the CI workflow and completed CI plans to remain.
 - Kept hosted validation from launching ADClient or handling attribution
   responses.
+- Guarded attribution completion with a request generation so a stale completion
+  from an earlier retry or a duplicate result cannot overwrite active state.
 
 ## 2026-06-09
 

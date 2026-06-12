@@ -28,6 +28,7 @@ Priority:
   changes
 - Keep the centralized button state helper as the source of truth for attribution
   titles, enabled state, and accessibility text
+- Ignore a stale completion from an earlier retry or duplicate terminal result
 - Maintain the small sample project structure
 - Keep `scripts/check-baseline.py` passing for local-only attribution handling,
   Swift/Xcode metadata, source inventory, and privacy guardrails
@@ -76,6 +77,8 @@ requesting, completed, and retry states through the centralized button state
 helper.
 Accessibility announcements should describe user-triggered attribution state
 changes for requesting, completed, and retry states.
+Only the active in-progress request generation should apply completion state, so
+a stale completion cannot overwrite a newer retry.
 On macOS, the baseline should parse the project and type-check both Swift files
 against the current device SDK without launching the app or invoking ADClient.
 Current iOS SDKs no longer provide a linkable ADClient implementation, so full
