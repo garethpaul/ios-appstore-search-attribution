@@ -37,6 +37,10 @@ Helpful reports include:
   signals.
 - Accessibility announcements should stay aligned with those user-triggered
   state changes.
+- The pinned macOS workflow uses Python 3.12, read-only repository permissions,
+  and disabled checkout credential persistence. It parses the project and
+  type-checks its Swift sources against the device SDK without launching
+  ADClient or handling attribution payloads.
 
 ## Mobile Privacy Notes
 

@@ -12,14 +12,18 @@ local-only handling guardrails are checked before review.
 ## Objectives
 
 - Run the existing `make check` wrapper in GitHub Actions.
-- Keep the hosted job independent of Xcode and Apple framework availability.
-- Make the workflow presence part of the static baseline contract.
+- Pin the hosted toolchain and actions without persisting checkout credentials.
+- Keep ADClient execution and attribution payload handling outside hosted CI.
+- Make the workflow presence and security posture part of the baseline contract.
 
 ## Work Completed
 
-- Added `.github/workflows/check.yml` to run `make check` on pushes, pull
-  requests, and manual dispatches.
-- Set up Python 3.12 for the static checker.
+- Added `.github/workflows/check.yml` to run `make check` on bounded macOS jobs
+  for pushes, pull requests, and manual dispatches.
+- Set up Python 3.12 with an immutable action and used an immutable checkout
+  action with credential persistence disabled.
+- Integrated project parsing and Swift device-SDK type-checking while keeping
+  attribution requests and response handling outside the job.
 - Extended `scripts/check-baseline.py` to require the CI workflow and this
   completed plan.
 - Updated README, VISION, SECURITY, and CHANGES with the CI baseline.
@@ -32,5 +36,5 @@ local-only handling guardrails are checked before review.
 
 ## Follow-Up Candidates
 
-- Add a macOS/Xcode test job once the legacy scheme and simulator destination
-  are documented.
+- Add link or runtime validation only after migrating away from the unavailable
+  ADClient implementation or documenting a compatible legacy SDK environment.

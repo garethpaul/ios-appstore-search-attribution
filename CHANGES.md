@@ -2,10 +2,21 @@
 
 ## 2026-06-10
 
-- Added a GitHub Actions check workflow that runs the existing static
-  `make check` baseline on pushes, pull requests, and manual dispatches.
-- Added a static guard requiring the CI workflow and completed CI baseline plan
-  to remain checked in.
+- Migrated the project setting and app launch signature from Swift 3 to Swift 5.
+- Replaced the obsolete global accessibility announcement API with the Swift 5
+  `UIAccessibility.post` API.
+- Raised the deployment target from iOS 10 to iOS 12, the minimum supported by
+  the hosted Xcode 16.4 SDK.
+- Added the missing iAd framework build-phase linkage required by ADClient.
+- Upgraded Xcode-enabled validation to parse the project and type-check both
+  Swift sources against the iOS device SDK. Current iOS SDKs no longer provide
+  a linkable ADClient implementation.
+- Added pinned, read-only macOS GitHub Actions CI for the canonical `make check`
+  baseline.
+- Pinned Python 3.12 setup, disabled checkout credential persistence, and added
+  a static guard requiring the CI workflow and completed CI plans to remain.
+- Kept hosted validation from launching ADClient or handling attribution
+  responses.
 
 ## 2026-06-09
 

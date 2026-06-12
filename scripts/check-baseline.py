@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+import ast
 from pathlib import Path
 import plistlib
 import re
 import shutil
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
@@ -19,6 +21,8 @@ ACCESSIBILITY_STATE_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibili
 BUTTON_STATE_HELPER_PLAN = ROOT / "docs/plans/2026-06-09-attribution-button-state-helper.md"
 ACCESSIBILITY_ANNOUNCEMENT_PLAN = ROOT / "docs/plans/2026-06-09-attribution-accessibility-announcements.md"
 CI_PLAN = ROOT / "docs/plans/2026-06-10-ci-baseline.md"
+HOSTED_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-10-hosted-project-validation.md"
+SWIFT_5_BUILD_PLAN = ROOT / "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md"
 
 
 def require(condition, message, failures):
@@ -71,16 +75,48 @@ def parse_plist(relative_path, failures):
         return {}
 
 
+def has_device_typecheck_command(checker):
+    required_arguments = {
+        "xcrun",
+        "--sdk",
+        "iphoneos",
+        "swiftc",
+        "-typecheck",
+        "-swift-version",
+        "5",
+        "-target",
+        "arm64-apple-ios12.0",
+        "ios-search-ads-sample/AppDelegate.swift",
+        "ios-search-ads-sample/ViewController.swift",
+    }
+    try:
+        tree = ast.parse(checker)
+    except SyntaxError:
+        return False
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.List):
+            continue
+        arguments = {
+            element.value
+            for element in node.elts
+            if isinstance(element, ast.Constant) and isinstance(element.value, str)
+        }
+        if required_arguments.issubset(arguments):
+            return True
+    return False
+
+
 def main():
     failures = []
     required_files = [
         ".gitignore",
+        ".github/workflows/check.yml",
         "CHANGES.md",
         "Makefile",
         "README.md",
         "SECURITY.md",
         "VISION.md",
-        ".github/workflows/check.yml",
         "ios-search-ads-sample.xcodeproj/project.pbxproj",
         "ios-search-ads-sample.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
         "ios-search-ads-sample/Info.plist",
@@ -100,6 +136,8 @@ def main():
         "docs/plans/2026-06-09-attribution-button-state-helper.md",
         "docs/plans/2026-06-09-attribution-accessibility-announcements.md",
         "docs/plans/2026-06-10-ci-baseline.md",
+        "docs/plans/2026-06-10-hosted-project-validation.md",
+        "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md",
     ]
 
     for relative_path in required_files:
@@ -123,6 +161,7 @@ def main():
     vision = read("VISION.md")
     security = read("SECURITY.md")
     changes = read("CHANGES.md")
+    checker = read("scripts/check-baseline.py")
     gitignore = read(".gitignore")
     makefile = read("Makefile")
     workflow = read(".github/workflows/check.yml")
@@ -137,6 +176,8 @@ def main():
     button_state_helper_plan = BUTTON_STATE_HELPER_PLAN.read_text(encoding="utf-8") if BUTTON_STATE_HELPER_PLAN.exists() else ""
     accessibility_announcement_plan = ACCESSIBILITY_ANNOUNCEMENT_PLAN.read_text(encoding="utf-8") if ACCESSIBILITY_ANNOUNCEMENT_PLAN.exists() else ""
     ci_plan = CI_PLAN.read_text(encoding="utf-8") if CI_PLAN.exists() else ""
+    hosted_validation_plan = HOSTED_VALIDATION_PLAN.read_text(encoding="utf-8") if HOSTED_VALIDATION_PLAN.exists() else ""
+    swift_5_build_plan = SWIFT_5_BUILD_PLAN.read_text(encoding="utf-8") if SWIFT_5_BUILD_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
@@ -153,11 +194,20 @@ def main():
     require(app_plist.get("UILaunchStoryboardName") == "LaunchScreen" and app_plist.get("UIMainStoryboardFile") == "Main",
             "Info.plist must keep storyboard configuration",
             failures)
-    require("SWIFT_VERSION = 3.0" in project and "IPHONEOS_DEPLOYMENT_TARGET = 10.0" in project,
-            "Xcode project must keep the Swift 3 / iOS 10 sample context",
+    require(project.count("SWIFT_VERSION = 5.0") == 2 and "SWIFT_VERSION = 3.0" not in project and
+            project.count("IPHONEOS_DEPLOYMENT_TARGET = 12.0") == 2 and
+            "IPHONEOS_DEPLOYMENT_TARGET = 10.0" not in project,
+            "Xcode project must use Swift 5 with the iOS 12 deployment target",
+            failures)
+    require("[UIApplication.LaunchOptionsKey: Any]?" in active_app_delegate,
+            "AppDelegate must use the Swift 5 launch-options signature",
             failures)
     require("ios-search-ads-sample/Info.plist" in project and "AppDelegate.swift in Sources" in project,
             "Xcode project must keep app plist and Swift source wiring",
+            failures)
+    require(project.count("iAd.framework in Frameworks") == 2 and
+            "System/Library/Frameworks/iAd.framework" in project,
+            "Xcode project must link the iAd framework used by ADClient",
             failures)
 
     require("ADClient.shared().requestAttributionDetails" not in launch_body,
@@ -203,7 +253,7 @@ def main():
                 f"ViewController must keep state-specific accessibility text: {accessibility_text}",
                 failures)
     require("func applyAttributionButtonState(_ state: AttributionButtonState, announce: Bool = false)" in active_view_controller and
-            "UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, attributionButton.accessibilityLabel)" in button_state_helper,
+            "UIAccessibility.post(notification: .announcement, argument: attributionButton.accessibilityLabel)" in button_state_helper,
             "ViewController must announce attribution state changes to assistive technologies",
             failures)
     require(request_action.count("announce: true") >= 3 and "applyAttributionButtonState(.ready)" in configure_button,
@@ -283,9 +333,6 @@ def main():
             "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower() and "accessibility announcements" in changes.lower() and "centralized button state" in changes.lower() and "GitHub Actions" in changes,
             "CHANGES must record logging, segment, user-triggered attribution, in-flight UI, main-queue completion, and baseline updates",
             failures)
-    require("uses: actions/checkout@v4" in workflow and "uses: actions/setup-python@v5" in workflow and "run: make check" in workflow,
-            "GitHub Actions workflow must set up Python and run make check",
-            failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
             "status: completed" in main_thread_plan and "status: completed" in in_flight_plan,
             "plans must be marked completed",
@@ -308,12 +355,78 @@ def main():
     require("status: completed" in accessibility_announcement_plan,
             "attribution accessibility announcements plan must be marked completed",
             failures)
-    require("Status: Completed" in ci_plan and "make check" in ci_plan,
-            "CI baseline plan must record completed status and make check verification",
+    require("Status: Completed" in ci_plan and "make check" in ci_plan and
+            "credential persistence disabled" in ci_plan,
+            "CI baseline plan must record completion, verification, and credential handling",
+            failures)
+    require("status: completed" in hosted_validation_plan and "make check" in hosted_validation_plan and
+            "Python 3.12" in hosted_validation_plan,
+            "hosted project validation plan must document completion, make check, and Python 3.12",
+            failures)
+    require("status: completed" in swift_5_build_plan and "device sdk" in swift_5_build_plan.lower(),
+            "Swift 5 build plan must be completed and document device SDK verification",
+            failures)
+    require(workflow.count("permissions:\n  contents: read") == 1 and
+            not re.search(r"(?m)^\s{2,}permissions:\s*$", workflow) and
+            not re.search(r"(?m)^\s+[A-Za-z0-9_-]+:\s*write\s*$", workflow),
+            "Check workflow must use one top-level read-only permissions block",
+            failures)
+    require("cancel-in-progress: true" in workflow and "runs-on: macos-15" in workflow and
+            "timeout-minutes: 10" in workflow,
+            "Check workflow must bound duplicate and long-running macOS jobs",
+            failures)
+    require(workflow.count("uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10") == 1 and
+            "persist-credentials: false" in workflow and
+            workflow.count("uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065") == 1 and
+            'python-version: "3.12"' in workflow and
+            "run: make check" in workflow,
+            "Check workflow must pin credential-free checkout and Python 3.12 before running the canonical baseline",
+            failures)
+    require(has_device_typecheck_command(checker),
+            "Checker must preserve the Swift 5 iOS device-SDK type-check command",
             failures)
 
     if shutil.which("xcodebuild"):
-        print("xcodebuild is available; run a scheme-specific Xcode test on macOS before release.")
+        project_result = subprocess.run(
+            ["xcodebuild", "-list", "-project", "ios-search-ads-sample.xcodeproj"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        require(project_result.returncode == 0,
+                "xcodebuild could not parse ios-search-ads-sample.xcodeproj: " + project_result.stdout.strip(),
+                failures)
+
+        sdk_result = subprocess.run(
+            ["xcrun", "--sdk", "iphoneos", "--show-sdk-path"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        require(sdk_result.returncode == 0,
+                "xcrun could not locate the iOS device SDK: " + sdk_result.stdout.strip(),
+                failures)
+        if sdk_result.returncode == 0:
+            typecheck_result = subprocess.run(
+                [
+                    "xcrun", "--sdk", "iphoneos", "swiftc",
+                    "-typecheck",
+                    "-swift-version", "5",
+                    "-target", "arm64-apple-ios12.0",
+                    "-sdk", sdk_result.stdout.strip(),
+                    "ios-search-ads-sample/AppDelegate.swift",
+                    "ios-search-ads-sample/ViewController.swift",
+                ],
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            require(typecheck_result.returncode == 0,
+                    "swiftc could not type-check the app against the iOS device SDK: " + typecheck_result.stdout.strip(),
+                    failures)
     else:
         print("xcodebuild unavailable; static iOS baseline only.")
 

@@ -33,12 +33,17 @@ Priority:
   Swift/Xcode metadata, source inventory, and privacy guardrails
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
-- Keep GitHub Actions running the static `make check` baseline before review
+- Keep the project on Swift 5 with the oldest deployment target supported by
+  the hosted Xcode SDK
+- Keep pinned, credential-free macOS GitHub Actions CI on Python 3.12, parsing
+  the project and type-checking Swift against the device SDK through the
+  canonical `make check` gate
 
 Next priorities:
 
 - Add manual verification steps for attribution response handling
-- Modernize Swift/project settings in a dedicated pass
+- Evaluate migration from deprecated ADClient separately from build-toolchain
+  maintenance
 - Document privacy expectations for attribution data
 
 Contribution rules:
@@ -46,8 +51,8 @@ Contribution rules:
 - One PR = one focused attribution, build, or documentation change.
 - Verify behavior on a compatible iOS environment when changing the request.
 - Keep signing files and generated build products out of git.
-- Keep `.github/workflows/check.yml` aligned with the static attribution
-  baseline until a macOS/Xcode job is documented.
+- Keep `.github/workflows/check.yml` aligned with the static attribution,
+  project parsing, and device-SDK type-checking baseline.
 - Document any data storage or logging change.
 
 ## Security And Privacy
@@ -61,7 +66,7 @@ store, or transmit attribution data beyond the sample's explicit purpose.
 
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
 `scripts/check-baseline.py` without Xcode. It verifies the ADClient request
-flow, Swift 3/iOS 10 project context, plist/storyboard XML, source inventory,
+flow, Swift 5/iOS 12 project context, plist/storyboard XML, source inventory,
 and local-only attribution guardrails. It also verifies that attribution remains
 behind an explicit user action, is not requested from app launch or view-load
 code, shows an in-flight disabled button title, keeps the completed state
@@ -71,6 +76,11 @@ requesting, completed, and retry states through the centralized button state
 helper.
 Accessibility announcements should describe user-triggered attribution state
 changes for requesting, completed, and retry states.
+On macOS, the baseline should parse the project and type-check both Swift files
+against the current device SDK without launching the app or invoking ADClient.
+Current iOS SDKs no longer provide a linkable ADClient implementation, so full
+runtime/link verification requires an older compatible SDK or a separate
+AdServices migration. Successful type-checking does not prove the service works.
 
 ## What We Will Not Merge (For Now)
 
