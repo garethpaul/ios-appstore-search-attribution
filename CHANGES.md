@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Made every Make verification target derive the checkout root so the static
+  attribution baseline works from external directories.
 - Kept malformed attribution responses retryable unless the required
   `Version3.1` dictionary and `iad-attribution` field are present.
 - Required `iad-attribution` to decode as Boolean before completion while

@@ -26,6 +26,7 @@ SWIFT_5_BUILD_PLAN = ROOT / "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.
 STALE_COMPLETION_PLAN = ROOT / "docs/plans/2026-06-12-stale-attribution-completion-guard.md"
 PAYLOAD_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-13-attribution-payload-validation.md"
 ATTRIBUTION_BOOLEAN_PLAN = ROOT / "docs/plans/2026-06-13-attribution-boolean-field.md"
+LOCATION_INDEPENDENT_MAKE_PLAN = ROOT / "docs/plans/2026-06-13-location-independent-make.md"
 
 
 def require(condition, message, failures):
@@ -152,6 +153,7 @@ def main():
         "docs/plans/2026-06-12-stale-attribution-completion-guard.md",
         "docs/plans/2026-06-13-attribution-payload-validation.md",
         "docs/plans/2026-06-13-attribution-boolean-field.md",
+        "docs/plans/2026-06-13-location-independent-make.md",
     ]
 
     for relative_path in required_files:
@@ -195,6 +197,7 @@ def main():
     stale_completion_plan = STALE_COMPLETION_PLAN.read_text(encoding="utf-8") if STALE_COMPLETION_PLAN.exists() else ""
     payload_validation_plan = PAYLOAD_VALIDATION_PLAN.read_text(encoding="utf-8") if PAYLOAD_VALIDATION_PLAN.exists() else ""
     attribution_boolean_plan = ATTRIBUTION_BOOLEAN_PLAN.read_text(encoding="utf-8") if ATTRIBUTION_BOOLEAN_PLAN.exists() else ""
+    location_independent_make_plan = LOCATION_INDEPENDENT_MAKE_PLAN.read_text(encoding="utf-8") if LOCATION_INDEPENDENT_MAKE_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
@@ -357,6 +360,12 @@ def main():
     require(".PHONY: build check lint test" in makefile and "lint test build: check" in makefile,
             "Makefile must expose lint, test, and build aliases for the local baseline",
             failures)
+    require("ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))" in makefile and '@python3 "$(ROOT)/scripts/check-baseline.py"' in makefile,
+            "Makefile must invoke the checker through the loaded checkout root", failures)
+    require("absolute Makefile path" in readme and "any working directory" in readme,
+            "README must document location-independent verification", failures)
+    require("Make verification target derive the checkout root" in changes and "external directories" in changes,
+            "CHANGES must record location-independent verification", failures)
     require("make lint" in readme and "make test" in readme and "make build" in readme and "make check" in readme and "ADClient" in readme and "local-only" in readme.lower() and
             "button" in readme.lower() and "main queue" in readme.lower() and "in-flight" in readme.lower() and "completed state" in readme.lower() and "state-specific accessibility" in readme.lower() and "accessibility announcements" in readme.lower() and "centralized button state" in readme.lower() and "stale completion" in readme.lower() and "GitHub Actions" in readme,
             "README must document static verification and local-only, user-triggered ADClient handling",
@@ -453,6 +462,11 @@ def main():
             "xcodebuild was unavailable" in attribution_boolean_verification,
             "attribution Boolean field plan must record completed local verification",
             failures)
+    location_statuses = re.findall(r"(?mi)^status:\s*(.+?)\s*$", location_independent_make_plan)
+    location_verification = markdown_section(location_independent_make_plan, "Verification Completed")
+    location_required = ("Root and external-directory Make gates passed", "root-derivation mutation failed", "checker-invocation mutation failed", "plan-status mutation failed", "plan-evidence mutation failed", "documentation mutation failed")
+    require(location_statuses == ["completed"] and all(item in location_verification for item in location_required) and not re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", location_verification),
+            "location-independent Make plan must record completed verification", failures)
     stale_completion_status = re.findall(
         r"(?mi)^status:\s*(.+?)\s*$", stale_completion_plan
     )
