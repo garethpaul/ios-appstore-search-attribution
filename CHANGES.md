@@ -4,6 +4,8 @@
 
 - Kept malformed attribution responses retryable unless the required
   `Version3.1` dictionary and `iad-attribution` field are present.
+- Required `iad-attribution` to decode as Boolean before completion while
+  preserving both `true` and `false` as valid local-only outcomes.
 
 ## 2026-06-10
 

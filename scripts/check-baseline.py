@@ -25,6 +25,7 @@ HOSTED_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-10-hosted-project-validation
 SWIFT_5_BUILD_PLAN = ROOT / "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md"
 STALE_COMPLETION_PLAN = ROOT / "docs/plans/2026-06-12-stale-attribution-completion-guard.md"
 PAYLOAD_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-13-attribution-payload-validation.md"
+ATTRIBUTION_BOOLEAN_PLAN = ROOT / "docs/plans/2026-06-13-attribution-boolean-field.md"
 
 
 def require(condition, message, failures):
@@ -150,6 +151,7 @@ def main():
         "docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md",
         "docs/plans/2026-06-12-stale-attribution-completion-guard.md",
         "docs/plans/2026-06-13-attribution-payload-validation.md",
+        "docs/plans/2026-06-13-attribution-boolean-field.md",
     ]
 
     for relative_path in required_files:
@@ -192,6 +194,7 @@ def main():
     swift_5_build_plan = SWIFT_5_BUILD_PLAN.read_text(encoding="utf-8") if SWIFT_5_BUILD_PLAN.exists() else ""
     stale_completion_plan = STALE_COMPLETION_PLAN.read_text(encoding="utf-8") if STALE_COMPLETION_PLAN.exists() else ""
     payload_validation_plan = PAYLOAD_VALIDATION_PLAN.read_text(encoding="utf-8") if PAYLOAD_VALIDATION_PLAN.exists() else ""
+    attribution_boolean_plan = ATTRIBUTION_BOOLEAN_PLAN.read_text(encoding="utf-8") if ATTRIBUTION_BOOLEAN_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
@@ -328,11 +331,12 @@ def main():
     completion_index = request_action.find("attributionRequestCompleted = true")
     require(payload_guard is not None and
             'attributeDetails?["Version3.1"] as? [String: AnyObject]' in payload_guard.group("conditions") and
-            'attributionDict["iad-attribution"]' in payload_guard.group("conditions") and
+            'let searchAttribution = attributionDict["iad-attribution"] as? Bool' in payload_guard.group("conditions") and
+            'let searchAttribution = attributionDict["iad-attribution"] else' not in payload_guard.group("conditions") and
             "applyAttributionButtonState(.retry, announce: true)" in payload_guard.group("body") and
             "return" in payload_guard.group("body") and
             payload_consume_index != -1 and completion_index > payload_consume_index,
-            "ViewController must retry malformed attribution payloads before completed state",
+            "ViewController must require a Boolean attribution field and retry malformed payloads before completed state",
             failures)
     active_attribution_sources = active_app_delegate + "\n" + active_view_controller
     require(not re.search(r"\b(?:print|println|NSLog)\s*\(", active_attribution_sources),
@@ -360,6 +364,9 @@ def main():
     require("malformed attribution response" in readme.lower(),
             "README must document retry behavior for malformed attribution responses",
             failures)
+    require("Boolean" in readme and "true" in readme and "false" in readme,
+            "README must document Boolean attribution field semantics",
+            failures)
     require("scripts/check-baseline.py" in vision and "make lint" in vision and "make test" in vision and "make build" in vision and "local-only" in vision.lower() and
             "main queue" in vision.lower() and "in-flight" in vision.lower() and "completed state" in vision.lower() and "state-specific accessibility" in vision.lower() and "accessibility announcements" in vision.lower() and "centralized button state" in vision.lower() and "stale completion" in vision.lower() and "GitHub Actions" in vision,
             "VISION must describe the current static privacy baseline",
@@ -367,11 +374,17 @@ def main():
     require("malformed attribution response" in vision.lower(),
             "VISION must describe fail-closed attribution payload validation",
             failures)
+    require("Boolean" in vision and "true" in vision and "false" in vision,
+            "VISION must describe Boolean attribution field semantics",
+            failures)
     require("attribution" in security.lower() and "make check" in security and "in-flight" in security.lower() and "completed state" in security.lower() and "state-specific accessibility" in security.lower() and "accessibility announcements" in security.lower() and "centralized button state" in security.lower() and "stale completion" in security.lower() and "GitHub Actions" in security,
             "SECURITY must document attribution privacy and the static baseline",
             failures)
     require("malformed attribution response" in security.lower(),
             "SECURITY must document malformed response handling",
+            failures)
+    require("Boolean" in security and "true" in security and "false" in security,
+            "SECURITY must document Boolean attribution field validation",
             failures)
     require("debug logging" in changes and "segment" in changes and "make check" in changes and "make lint" in changes and "make test" in changes and "make build" in changes and
             "user-triggered" in changes and "main queue" in changes and "in-flight" in changes.lower() and "completed state" in changes.lower() and "state-specific accessibility" in changes.lower() and "accessibility announcements" in changes.lower() and "centralized button state" in changes.lower() and "stale completion" in changes.lower() and "GitHub Actions" in changes,
@@ -379,6 +392,9 @@ def main():
             failures)
     require("malformed attribution response" in changes.lower(),
             "CHANGES must record attribution payload validation",
+            failures)
+    require("Boolean" in changes and "true" in changes and "false" in changes,
+            "CHANGES must record Boolean attribution field validation",
             failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
             "status: completed" in main_thread_plan and "status: completed" in in_flight_plan,
@@ -417,6 +433,25 @@ def main():
             "All four Make gates" in payload_validation_plan and
             "hostile mutations" in payload_validation_plan.lower(),
             "attribution payload validation plan must record completed status and actual verification",
+            failures)
+    attribution_boolean_status = re.findall(
+        r"(?mi)^status:\s*(.+?)\s*$", attribution_boolean_plan
+    )
+    attribution_boolean_work = markdown_section(
+        attribution_boolean_plan, "Work Completed"
+    )
+    attribution_boolean_verification = markdown_section(
+        attribution_boolean_plan, "Verification Completed"
+    )
+    require(attribution_boolean_status == ["completed"] and attribution_boolean_work,
+            "attribution Boolean field plan must record one completed status and completed work",
+            failures)
+    require(attribution_boolean_verification and
+            not re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", attribution_boolean_verification) and
+            "All four Make gates" in attribution_boolean_verification and
+            "six hostile mutations" in attribution_boolean_verification.lower() and
+            "xcodebuild was unavailable" in attribution_boolean_verification,
+            "attribution Boolean field plan must record completed local verification",
             failures)
     stale_completion_status = re.findall(
         r"(?mi)^status:\s*(.+?)\s*$", stale_completion_plan
