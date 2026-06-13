@@ -91,7 +91,7 @@ class ViewController: UIViewController {
                 strongSelf.attributionRequestInProgress = false
                 guard error == nil,
                       let attributionDict = attributeDetails?["Version3.1"] as? [String: AnyObject],
-                      let searchAttribution = attributionDict["iad-attribution"] else {
+                      let searchAttribution = attributionDict["iad-attribution"] as? Bool else {
                     strongSelf.applyAttributionButtonState(.retry, announce: true)
                     return
                 }

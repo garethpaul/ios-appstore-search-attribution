@@ -1,6 +1,6 @@
 # Validate Attribution Boolean Field
 
-status: planned
+status: completed
 
 ## Context
 
@@ -42,8 +42,26 @@ request complete instead of returning the user to the retry state.
 
 ## Work Completed
 
-Pending implementation.
+- Required `iad-attribution` to decode as `Bool` in the callback guard before
+  terminal state can be entered.
+- Preserved both Boolean outcomes as valid and routed missing or non-Boolean
+  values through the existing retry state.
+- Extended the deterministic checker to reject untyped extraction, wrong field
+  types, missing local consumption, completion reordering, stale plan status,
+  and missing verification evidence.
+- Documented the Boolean contract and local-only privacy boundary in the
+  repository guidance and change log.
 
 ## Verification Completed
 
-Pending implementation and verification.
+- All four Make gates (`make lint`, `make test`, `make build`, and
+  `make check`) passed against the completed implementation.
+- `python3 -m py_compile scripts/check-baseline.py`, workflow YAML parsing, and
+  `git diff --check` passed.
+- A prepared baseline passed and six hostile mutations were rejected: removing
+  the `Bool` cast, casting the field as `String`, removing local consumption,
+  moving completion before consumption, reopening the plan, and removing
+  required verification evidence.
+- `xcodebuild was unavailable` on this Linux host, so device-SDK Swift
+  type-checking and ADClient runtime behavior were not executed locally. The
+  canonical checker reports that limitation without claiming runtime coverage.

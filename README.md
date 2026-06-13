@@ -75,9 +75,9 @@ stay available while preserving the single source of truth.
 The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 Request generations reject a stale completion from an earlier retry or a
 duplicate terminal result before it can overwrite the active button state.
-A malformed attribution response that omits `Version3.1` or `iad-attribution`
-stays retryable instead of disabling the button as completed; present values,
-including false attribution, remain local and valid.
+A malformed attribution response that omits `Version3.1` or supplies a
+non-Boolean `iad-attribution` stays retryable instead of disabling the button
+as completed. Both Boolean values, `true` and `false`, remain local and valid.
 
 The pinned, credential-free GitHub Actions check sets up Python 3.12 and runs
 `make check` on `macos-15`. The baseline parses the project and type-checks both
@@ -109,6 +109,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   changes.
 - Keep attribution completion generation-guarded across retries.
 - Keep malformed attribution response handling retryable and local-only.
+- Require the `iad-attribution` field to be Boolean; both `true` and `false`
+  are valid without logging, storage, or transmission.
 
 ## Maintenance Notes
 

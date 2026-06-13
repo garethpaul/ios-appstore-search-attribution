@@ -81,7 +81,8 @@ changes for requesting, completed, and retry states.
 Only the active in-progress request generation should apply completion state, so
 a stale completion cannot overwrite a newer retry.
 A malformed attribution response should not enter completed state unless the
-required version dictionary and attribution field are present.
+required version dictionary contains a Boolean attribution field. Both `true`
+and `false` are valid local-only results; other field types stay retryable.
 On macOS, the baseline should parse the project and type-check both Swift files
 against the current device SDK without launching the app or invoking ADClient.
 Current iOS SDKs no longer provide a linkable ADClient implementation, so full
