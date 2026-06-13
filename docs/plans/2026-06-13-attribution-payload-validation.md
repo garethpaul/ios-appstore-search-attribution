@@ -1,6 +1,6 @@
 # Attribution Payload Validation
 
-status: planned
+status: completed
 
 ## Context
 
@@ -69,3 +69,18 @@ transient or incompatible payload cannot be retried.
 - Hostile mutations removing either required payload key, retry state, early
   return, local consumption, completion ordering, plan status, or verification
   evidence must be rejected.
+
+## Verification Completed
+
+- All four Make gates (`make lint`, `make test`, `make build`, and
+  `make check`) passed against the completed implementation and plan.
+- `python3 -m py_compile scripts/check-baseline.py`, available plist/XML/workflow
+  parsers, and `git diff --check` passed.
+- A prepared baseline passed and nine hostile mutations were rejected. They
+  removed the nil-error requirement, changed either required key, removed retry
+  or its early return, removed local consumption, moved completion before
+  consumption, reopened the plan, or removed required verification evidence.
+- `xcodebuild` was unavailable on this Linux host, so device-SDK Swift
+  type-checking and ADClient runtime behavior were not executed locally. The
+  canonical checker reported that limitation rather than claiming Xcode or
+  service coverage.

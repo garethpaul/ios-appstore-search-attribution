@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-13
+
+- Kept malformed attribution responses retryable unless the required
+  `Version3.1` dictionary and `iad-attribution` field are present.
+
 ## 2026-06-10
 
 - Migrated the project setting and app launch signature from Swift 3 to Swift 5.

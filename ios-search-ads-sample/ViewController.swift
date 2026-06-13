@@ -89,17 +89,15 @@ class ViewController: UIViewController {
                 }
 
                 strongSelf.attributionRequestInProgress = false
-                if error != nil {
+                guard error == nil,
+                      let attributionDict = attributeDetails?["Version3.1"] as? [String: AnyObject],
+                      let searchAttribution = attributionDict["iad-attribution"] else {
                     strongSelf.applyAttributionButtonState(.retry, announce: true)
                     return
                 }
 
-                if let attributionDict = attributeDetails?["Version3.1"] as? [String: AnyObject] {
-                    if let searchAttribution = attributionDict["iad-attribution"] {
-                        // Keep the attribution result local to this sample.
-                        _ = searchAttribution
-                    }
-                }
+                // Keep the attribution result local to this sample.
+                _ = searchAttribution
 
                 strongSelf.attributionRequestCompleted = true
                 strongSelf.applyAttributionButtonState(.completed, announce: true)
