@@ -39,6 +39,8 @@ Helpful reports include:
   state changes.
 - Request generations reject a stale completion or duplicate terminal result
   before it can overwrite the active attribution state.
+- A malformed attribution response must enter retry state rather than being
+  presented as completed, without logging or retaining the partial payload.
 - The pinned macOS workflow uses Python 3.12, read-only repository permissions,
   and disabled checkout credential persistence. It parses the project and
   type-checks its Swift sources against the device SDK without launching

@@ -75,6 +75,9 @@ stay available while preserving the single source of truth.
 The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 Request generations reject a stale completion from an earlier retry or a
 duplicate terminal result before it can overwrite the active button state.
+A malformed attribution response that omits `Version3.1` or `iad-attribution`
+stays retryable instead of disabling the button as completed; present values,
+including false attribution, remain local and valid.
 
 The pinned, credential-free GitHub Actions check sets up Python 3.12 and runs
 `make check` on `macos-15`. The baseline parses the project and type-checks both
@@ -105,6 +108,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Keep accessibility announcements aligned with user-triggered attribution state
   changes.
 - Keep attribution completion generation-guarded across retries.
+- Keep malformed attribution response handling retryable and local-only.
 
 ## Maintenance Notes
 
@@ -121,6 +125,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
 - See `docs/plans/2026-06-10-hosted-project-validation.md` for hosted project validation.
 - See `docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md` for device-SDK type-checking.
+- See `docs/plans/2026-06-13-attribution-payload-validation.md` for required
+  response-shape validation.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, plist/storyboard files, project metadata, or attribution behavior.
 
 ## Contributing
