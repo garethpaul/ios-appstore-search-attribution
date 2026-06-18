@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-18
+
+- Added a generation-owned attribution request timeout so a missing ADClient
+  completion restores retry state and any late completion remains unable to
+  overwrite newer work.
+
 ## 2026-06-13
 
 - Made every Make verification target derive the checkout root so the static

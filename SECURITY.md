@@ -39,6 +39,8 @@ Helpful reports include:
   state changes.
 - Request generations reject a stale completion or duplicate terminal result
   before it can overwrite the active attribution state.
+- A request timeout returns a stalled generation to retry state and uses the
+  same generation guard so any late completion cannot overwrite newer work.
 - A malformed attribution response must enter retry state rather than being
   presented as completed, without logging or retaining the partial payload.
 - The `iad-attribution` field must be Boolean before completion. Both `true`

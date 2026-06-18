@@ -29,6 +29,8 @@ Priority:
 - Keep the centralized button state helper as the source of truth for attribution
   titles, enabled state, and accessibility text
 - Ignore a stale completion from an earlier retry or duplicate terminal result
+- Bound each request with a timeout that restores retry state and rejects any
+  late completion
 - Keep malformed attribution response payloads retryable and local-only
 - Maintain the small sample project structure
 - Keep `scripts/check-baseline.py` passing for local-only attribution handling,
@@ -80,6 +82,8 @@ Accessibility announcements should describe user-triggered attribution state
 changes for requesting, completed, and retry states.
 Only the active in-progress request generation should apply completion state, so
 a stale completion cannot overwrite a newer retry.
+A request timeout should route a stalled generation through the same retry state
+and leave any late completion inert.
 A malformed attribution response should not enter completed state unless the
 required version dictionary contains a Boolean attribution field. Both `true`
 and `false` are valid local-only results; other field types stay retryable.

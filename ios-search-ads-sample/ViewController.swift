@@ -21,6 +21,8 @@ class ViewController: UIViewController {
     private var attributionRequestInProgress = false
     private var attributionRequestCompleted = false
     private var attributionRequestGeneration = 0
+    private let attributionRequestTimeoutInterval: TimeInterval = 30.0
+    private var attributionRequestTimeoutWorkItem: DispatchWorkItem?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -68,6 +70,34 @@ class ViewController: UIViewController {
         }
     }
 
+    private func finishAttributionRequest(generation: Int, succeeded: Bool) {
+        guard generation == attributionRequestGeneration,
+              attributionRequestInProgress else {
+            return
+        }
+
+        attributionRequestTimeoutWorkItem?.cancel()
+        attributionRequestTimeoutWorkItem = nil
+        attributionRequestInProgress = false
+
+        if succeeded {
+            attributionRequestCompleted = true
+            applyAttributionButtonState(.completed, announce: true)
+        } else {
+            applyAttributionButtonState(.retry, announce: true)
+        }
+    }
+
+    private func scheduleAttributionRequestTimeout(generation: Int) {
+        let timeoutWorkItem = DispatchWorkItem { [weak self] in
+            self?.finishAttributionRequest(generation: generation, succeeded: false)
+        }
+        attributionRequestTimeoutWorkItem = timeoutWorkItem
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + attributionRequestTimeoutInterval,
+            execute: timeoutWorkItem)
+    }
+
     @objc private func requestAttribution(_: UIButton) {
         if attributionRequestInProgress || attributionRequestCompleted {
             return
@@ -77,30 +107,24 @@ class ViewController: UIViewController {
         attributionRequestGeneration += 1
         let requestGeneration = attributionRequestGeneration
         applyAttributionButtonState(.requesting, announce: true)
+        scheduleAttributionRequestTimeout(generation: requestGeneration)
 
         ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in
-            DispatchQueue.main.async { [weak self] in
-                guard let strongSelf = self else {
-                    return
-                }
-                guard requestGeneration == strongSelf.attributionRequestGeneration,
-                      strongSelf.attributionRequestInProgress else {
-                    return
-                }
-
-                strongSelf.attributionRequestInProgress = false
-                guard error == nil,
-                      let attributionDict = attributeDetails?["Version3.1"] as? [String: AnyObject],
-                      let searchAttribution = attributionDict["iad-attribution"] as? Bool else {
-                    strongSelf.applyAttributionButtonState(.retry, announce: true)
-                    return
-                }
-
+            let requestSucceeded: Bool
+            if error == nil,
+               let attributionDict = attributeDetails?["Version3.1"] as? [String: AnyObject],
+               let searchAttribution = attributionDict["iad-attribution"] as? Bool {
                 // Keep the attribution result local to this sample.
                 _ = searchAttribution
+                requestSucceeded = true
+            } else {
+                requestSucceeded = false
+            }
 
-                strongSelf.attributionRequestCompleted = true
-                strongSelf.applyAttributionButtonState(.completed, announce: true)
+            DispatchQueue.main.async { [weak self] in
+                self?.finishAttributionRequest(
+                    generation: requestGeneration,
+                    succeeded: requestSucceeded)
             }
         }
     }

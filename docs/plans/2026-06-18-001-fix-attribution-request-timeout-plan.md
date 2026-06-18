@@ -2,7 +2,7 @@
 title: "fix: recover stalled attribution requests"
 date: 2026-06-18
 type: fix
-status: planned
+status: completed
 ---
 
 # Attribution Request Completion Timeout
@@ -133,3 +133,26 @@ owns the deadline, while one terminal helper remains the authority for state.
 
 None block implementation. Compatible-device observations may justify a future
 timeout-policy adjustment without changing the lifecycle design.
+
+## Work Completed
+
+- Added a weakly captured, cancellable timeout work item for each attribution
+  generation and scheduled it before invoking `ADClient`.
+- Centralized generation checks, timeout cancellation, request cleanup, retry,
+  completion, accessibility announcements, and button state in one terminal
+  helper.
+- Preserved fail-closed Boolean payload validation and local-only handling while
+  delegating the validated outcome to main-queue terminal state.
+- Extended the static baseline and maintainer guidance for timeout ownership,
+  cancellation, late completion rejection, and completed evidence.
+
+## Verification Completed
+
+- All four Make gates passed in an isolated finalized-plan copy and again in the
+  exact worktree; Linux truthfully reported that `xcodebuild` was unavailable.
+- The external-directory Make gate passed through the absolute checkout path.
+- Six isolated timeout lifecycle mutations were rejected: removed timeout
+  state, removed scheduling, removed weak capture, removed cancellation,
+  changed timeout recovery to success, and a plan-evidence mutation.
+- Python syntax, exact diff, generated-artifact, conflict-marker, file-mode, and
+  credential-shaped addition audits passed.

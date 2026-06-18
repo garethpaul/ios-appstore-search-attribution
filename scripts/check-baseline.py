@@ -27,6 +27,7 @@ STALE_COMPLETION_PLAN = ROOT / "docs/plans/2026-06-12-stale-attribution-completi
 PAYLOAD_VALIDATION_PLAN = ROOT / "docs/plans/2026-06-13-attribution-payload-validation.md"
 ATTRIBUTION_BOOLEAN_PLAN = ROOT / "docs/plans/2026-06-13-attribution-boolean-field.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = ROOT / "docs/plans/2026-06-13-location-independent-make.md"
+ATTRIBUTION_TIMEOUT_PLAN = ROOT / "docs/plans/2026-06-18-001-fix-attribution-request-timeout-plan.md"
 
 
 def require(condition, message, failures):
@@ -154,6 +155,7 @@ def main():
         "docs/plans/2026-06-13-attribution-payload-validation.md",
         "docs/plans/2026-06-13-attribution-boolean-field.md",
         "docs/plans/2026-06-13-location-independent-make.md",
+        "docs/plans/2026-06-18-001-fix-attribution-request-timeout-plan.md",
     ]
 
     for relative_path in required_files:
@@ -198,16 +200,14 @@ def main():
     payload_validation_plan = PAYLOAD_VALIDATION_PLAN.read_text(encoding="utf-8") if PAYLOAD_VALIDATION_PLAN.exists() else ""
     attribution_boolean_plan = ATTRIBUTION_BOOLEAN_PLAN.read_text(encoding="utf-8") if ATTRIBUTION_BOOLEAN_PLAN.exists() else ""
     location_independent_make_plan = LOCATION_INDEPENDENT_MAKE_PLAN.read_text(encoding="utf-8") if LOCATION_INDEPENDENT_MAKE_PLAN.exists() else ""
+    attribution_timeout_plan = ATTRIBUTION_TIMEOUT_PLAN.read_text(encoding="utf-8") if ATTRIBUTION_TIMEOUT_PLAN.exists() else ""
     launch_body = swift_function_body(active_app_delegate, "func application")
     view_did_load = swift_function_body(active_view_controller, "override func viewDidLoad")
     configure_button = swift_function_body(active_view_controller, "func configureAttributionButton")
     button_state_helper = swift_function_body(active_view_controller, "func applyAttributionButtonState")
+    terminal_state = swift_function_body(active_view_controller, "func finishAttributionRequest")
+    timeout_scheduler = swift_function_body(active_view_controller, "func scheduleAttributionRequestTimeout")
     request_action = swift_function_body(active_view_controller, "func requestAttribution")
-    payload_guard = re.search(
-        r"guard error == nil,(?P<conditions>.*?)else \{(?P<body>.*?)\n\s*\}",
-        request_action,
-        re.DOTALL,
-    )
     attribution_request_index = request_action.find("ADClient.shared().requestAttributionDetails")
     main_dispatch_index = request_action.find("DispatchQueue.main.async")
     requesting_title_index = button_state_helper.find('attributionButton.setTitle("Requesting Attribution...", for: .disabled)')
@@ -281,7 +281,7 @@ def main():
             "UIAccessibility.post(notification: .announcement, argument: attributionButton.accessibilityLabel)" in button_state_helper,
             "ViewController must announce attribution state changes to assistive technologies",
             failures)
-    require(request_action.count("announce: true") >= 3 and "applyAttributionButtonState(.ready)" in configure_button,
+    require(active_view_controller.count("announce: true") >= 3 and "applyAttributionButtonState(.ready)" in configure_button,
             "ViewController must announce requesting, retry, and completed attribution states only after user-triggered changes",
             failures)
     require("private var attributionRequestInProgress = false" in active_view_controller and
@@ -294,13 +294,38 @@ def main():
             "let requestGeneration = attributionRequestGeneration" in request_action,
             "Each attribution request must capture a new generation",
             failures)
-    require("requestGeneration == strongSelf.attributionRequestGeneration" in request_action and
-            "strongSelf.attributionRequestInProgress else" in request_action,
+    require("generation == attributionRequestGeneration" in terminal_state and
+            "attributionRequestInProgress else" in terminal_state and
+            "return" in terminal_state,
             "Attribution completions must ignore stale generations and duplicate results",
+            failures)
+    require("private let attributionRequestTimeoutInterval: TimeInterval = 30.0" in active_view_controller and
+            "private var attributionRequestTimeoutWorkItem: DispatchWorkItem?" in active_view_controller,
+            "ViewController must retain one named attribution timeout work item",
+            failures)
+    require("DispatchWorkItem { [weak self]" in timeout_scheduler and
+            "self?.finishAttributionRequest(generation: generation, succeeded: false)" in timeout_scheduler and
+            "attributionRequestTimeoutWorkItem = timeoutWorkItem" in timeout_scheduler and
+            "DispatchQueue.main.asyncAfter(" in timeout_scheduler and
+            "deadline: .now() + attributionRequestTimeoutInterval" in timeout_scheduler and
+            "execute: timeoutWorkItem" in timeout_scheduler,
+            "Each request timeout must weakly deliver generation-scoped failure on the main queue",
+            failures)
+    timeout_cancel_index = terminal_state.find("attributionRequestTimeoutWorkItem?.cancel()")
+    timeout_clear_index = terminal_state.find("attributionRequestTimeoutWorkItem = nil")
+    progress_clear_index = terminal_state.find("attributionRequestInProgress = false")
+    require(-1 not in [timeout_cancel_index, timeout_clear_index, progress_clear_index] and
+            timeout_cancel_index < timeout_clear_index < progress_clear_index,
+            "Accepted terminal state must cancel and clear timeout work before request state",
+            failures)
+    schedule_index = request_action.find("scheduleAttributionRequestTimeout(generation: requestGeneration)")
+    request_index = request_action.find("ADClient.shared().requestAttributionDetails")
+    require(schedule_index != -1 and request_index != -1 and schedule_index < request_index,
+            "The active generation timeout must be scheduled before invoking ADClient",
             failures)
     require("attributionButton.isEnabled = false" in button_state_helper and
             "attributionButton.isEnabled = true" in button_state_helper and
-            "attributionRequestCompleted = true" in request_action,
+            "attributionRequestCompleted = true" in terminal_state,
             "ViewController must disable attribution while running and re-enable it on failure",
             failures)
     require(button_state_helper.count("attributionButton.isEnabled = false") >= 2,
@@ -309,10 +334,10 @@ def main():
     require(requesting_title_index != -1 and requesting_title_index < disable_button_index,
             "ViewController must show an in-flight disabled title before disabling attribution",
             failures)
-    require(request_action.count("applyAttributionButtonState(") == 3 and
+    require(request_action.count("applyAttributionButtonState(") == 1 and
             "applyAttributionButtonState(.requesting, announce: true)" in request_action and
-            "applyAttributionButtonState(.retry, announce: true)" in request_action and
-            "applyAttributionButtonState(.completed, announce: true)" in request_action,
+            "applyAttributionButtonState(.retry, announce: true)" in terminal_state and
+            "applyAttributionButtonState(.completed, announce: true)" in terminal_state,
             "ViewController must drive request, retry, and completed button states through the helper",
             failures)
     require("attributionButton.setTitle" not in request_action and
@@ -324,21 +349,22 @@ def main():
             "ViewController must dispatch attribution completion handling to the main queue",
             failures)
     require(main_dispatch_index != -1 and
-            request_action.find("attributionRequestInProgress = false", main_dispatch_index) != -1 and
-            request_action.find("applyAttributionButtonState(.retry, announce: true)", main_dispatch_index) != -1 and
-            request_action.find("applyAttributionButtonState(.completed, announce: true)", main_dispatch_index) != -1 and
-            request_action.find("attributionRequestCompleted = true", main_dispatch_index) != -1,
-            "ViewController must keep attribution completion state and UI updates inside the main-queue block",
+            request_action.find("self?.finishAttributionRequest(", main_dispatch_index) != -1 and
+            request_action.find("generation: requestGeneration", main_dispatch_index) != -1 and
+            request_action.find("succeeded: requestSucceeded", main_dispatch_index) != -1,
+            "ViewController must delegate callback completion to terminal state on the main queue",
             failures)
     payload_consume_index = request_action.find("_ = searchAttribution")
-    completion_index = request_action.find("attributionRequestCompleted = true")
-    require(payload_guard is not None and
-            'attributeDetails?["Version3.1"] as? [String: AnyObject]' in payload_guard.group("conditions") and
-            'let searchAttribution = attributionDict["iad-attribution"] as? Bool' in payload_guard.group("conditions") and
-            'let searchAttribution = attributionDict["iad-attribution"] else' not in payload_guard.group("conditions") and
-            "applyAttributionButtonState(.retry, announce: true)" in payload_guard.group("body") and
-            "return" in payload_guard.group("body") and
-            payload_consume_index != -1 and completion_index > payload_consume_index,
+    success_true_index = request_action.find("requestSucceeded = true")
+    success_false_index = request_action.find("requestSucceeded = false")
+    require("let requestSucceeded: Bool" in request_action and
+            "if error == nil" in request_action and
+            'attributeDetails?["Version3.1"] as? [String: AnyObject]' in request_action and
+            'let searchAttribution = attributionDict["iad-attribution"] as? Bool' in request_action and
+            'let searchAttribution = attributionDict["iad-attribution"] else' not in request_action and
+            payload_consume_index != -1 and
+            success_true_index > payload_consume_index and
+            success_false_index > success_true_index,
             "ViewController must require a Boolean attribution field and retry malformed payloads before completed state",
             failures)
     active_attribution_sources = active_app_delegate + "\n" + active_view_controller
@@ -405,6 +431,15 @@ def main():
     require("Boolean" in changes and "true" in changes and "false" in changes,
             "CHANGES must record Boolean attribution field validation",
             failures)
+    for document_name, document in [
+        ("README", readme),
+        ("VISION", vision),
+        ("SECURITY", security),
+        ("CHANGES", changes),
+    ]:
+        require("request timeout" in document.lower() and "late completion" in document.lower(),
+                f"{document_name} must document bounded attribution recovery and late completion rejection",
+                failures)
     require("status: completed" in baseline_plan and "status: completed" in explicit_request_plan and
             "status: completed" in main_thread_plan and "status: completed" in in_flight_plan,
             "plans must be marked completed",
@@ -467,6 +502,20 @@ def main():
     location_required = ("Root and external-directory Make gates passed", "root-derivation mutation failed", "checker-invocation mutation failed", "plan-status mutation failed", "plan-evidence mutation failed", "documentation mutation failed")
     require(location_statuses == ["completed"] and all(item in location_verification for item in location_required) and not re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", location_verification),
             "location-independent Make plan must record completed verification", failures)
+    attribution_timeout_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", attribution_timeout_plan)
+    attribution_timeout_work = markdown_section(attribution_timeout_plan, "Work Completed")
+    attribution_timeout_verification = markdown_section(attribution_timeout_plan, "Verification Completed")
+    attribution_timeout_required = (
+        "All four Make gates",
+        "external-directory Make gate",
+        "Six isolated timeout",
+        "plan-evidence mutation",
+    )
+    require(attribution_timeout_status == ["completed"] and attribution_timeout_work and
+            all(item in attribution_timeout_verification for item in attribution_timeout_required) and
+            not re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", attribution_timeout_verification),
+            "attribution request timeout plan must record completed work and verification",
+            failures)
     stale_completion_status = re.findall(
         r"(?mi)^status:\s*(.+?)\s*$", stale_completion_plan
     )

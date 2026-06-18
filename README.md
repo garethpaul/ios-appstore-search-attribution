@@ -75,6 +75,9 @@ stay available while preserving the single source of truth.
 The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
 Request generations reject a stale completion from an earlier retry or a
 duplicate terminal result before it can overwrite the active button state.
+A request timeout returns a stalled generation to retry state, cancels its
+pending deadline work, and leaves any late completion unable to overwrite a
+newer request.
 A malformed attribution response that omits `Version3.1` or supplies a
 non-Boolean `iad-attribution` stays retryable instead of disabling the button
 as completed. Both Boolean values, `true` and `false`, remain local and valid.
