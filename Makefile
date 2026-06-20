@@ -13,4 +13,5 @@ build:
 
 check:
 	cd "$(MAKEFILE_ROOT)" && python3 scripts/check-baseline.py
+	cd "$(MAKEFILE_ROOT)" && python3 -m unittest discover -s tests -p 'test_*.py'
 	cd "$(MAKEFILE_ROOT)" && scripts/run-xcode-tests.sh

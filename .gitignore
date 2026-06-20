@@ -37,6 +37,8 @@ playground.xcworkspace
 # Packages/
 .build/
 .DS_Store
+__pycache__/
+*.py[cod]
 *.local.xcconfig
 *.secrets.xcconfig
 .env
