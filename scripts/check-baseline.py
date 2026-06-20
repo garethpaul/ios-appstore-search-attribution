@@ -4,13 +4,47 @@ from __future__ import annotations
 
 import plistlib
 import re
+import stat
 import subprocess
 import sys
-import xml.etree.ElementTree as ET
+from xml.parsers import expat
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+MAX_STORYBOARD_XML_BYTES = 1024 * 1024
+MAX_STORYBOARD_XML_DEPTH = 256
+MAX_STORYBOARD_XML_ELEMENTS = 50_000
+MAX_STORYBOARD_XML_ATTRIBUTES = 1_024
+XML_CHUNK_BYTES = 64 * 1024
+
+
+class SafeXMLParseError(ValueError):
+    pass
+
+
+def repo_file_safety_error(path: Path) -> str | None:
+    try:
+        relative_path = path.relative_to(ROOT)
+    except ValueError:
+        return "path escapes the checkout"
+
+    if any(part in {"", ".", ".."} for part in relative_path.parts):
+        return "path escapes the checkout"
+
+    current = ROOT
+    for part in relative_path.parts:
+        current /= part
+        try:
+            mode = current.lstat().st_mode
+        except OSError as error:
+            return str(error)
+        if stat.S_ISLNK(mode):
+            return f"path traverses symlink: {current.relative_to(ROOT)}"
+
+    if not stat.S_ISREG(mode):
+        return "path is not a regular file"
+    return None
 
 
 def read(relative_path: str) -> str:
@@ -20,6 +54,68 @@ def read(relative_path: str) -> str:
 def require(condition: bool, message: str, failures: list[str]) -> None:
     if not condition:
         failures.append(message)
+
+
+def validate_storyboard_xml(path: Path) -> None:
+    safety_error = repo_file_safety_error(path)
+    if safety_error is not None:
+        raise SafeXMLParseError(safety_error)
+
+    parser = expat.ParserCreate(namespace_separator="\x1f")
+    depth = 0
+    element_count = 0
+    saw_root = False
+
+    def reject(message: str) -> None:
+        raise SafeXMLParseError(message)
+
+    def start_element(_name: str, _attrs: dict[str, str]) -> None:
+        nonlocal depth, element_count, saw_root
+        saw_root = True
+        depth += 1
+        element_count += 1
+        if depth > MAX_STORYBOARD_XML_DEPTH:
+            reject(f"XML nesting exceeds {MAX_STORYBOARD_XML_DEPTH} elements")
+        if element_count > MAX_STORYBOARD_XML_ELEMENTS:
+            reject(f"XML contains more than {MAX_STORYBOARD_XML_ELEMENTS} elements")
+        if len(_attrs) > MAX_STORYBOARD_XML_ATTRIBUTES:
+            reject(f"XML element contains more than {MAX_STORYBOARD_XML_ATTRIBUTES} attributes")
+
+    def end_element(_name: str) -> None:
+        nonlocal depth
+        depth -= 1
+
+    def reject_doctype(
+        _doctype_name: str,
+        _system_id: str | None,
+        _public_id: str | None,
+        _has_internal_subset: int,
+    ) -> None:
+        reject("DOCTYPE declarations are not allowed")
+
+    parser.StartElementHandler = start_element
+    parser.EndElementHandler = end_element
+    parser.StartDoctypeDeclHandler = reject_doctype
+    parser.EntityDeclHandler = lambda *_args: reject("Entity declarations are not allowed")
+    parser.UnparsedEntityDeclHandler = lambda *_args: reject("Entity declarations are not allowed")
+    parser.ExternalEntityRefHandler = lambda *_args: reject("External entities are not allowed")
+    parser.SkippedEntityHandler = lambda *_args: reject("Entity references are not allowed")
+    parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
+
+    try:
+        total_bytes = 0
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(XML_CHUNK_BYTES), b""):
+                total_bytes += len(chunk)
+                if total_bytes > MAX_STORYBOARD_XML_BYTES:
+                    reject(f"XML file exceeds {MAX_STORYBOARD_XML_BYTES} bytes")
+                parser.Parse(chunk, False)
+        parser.Parse(b"", True)
+    except (expat.ExpatError, LookupError) as error:
+        raise SafeXMLParseError(str(error)) from error
+
+    if not saw_root:
+        reject("XML document must contain a root element")
 
 
 def main() -> int:
@@ -41,11 +137,12 @@ def main() -> int:
         "ios-search-ads-sampleTests/AttributionRequestCoordinatorTests.swift",
         "ios-search-ads-sampleTests/AttributionResponseParserTests.swift",
         "scripts/run-xcode-tests.sh",
+        "tests/test_check_baseline_xml_security.py",
     ]
     for relative_path in required_files:
         path = ROOT / relative_path
-        require(path.is_file(), f"Required file missing: {relative_path}", failures)
-        require(not path.is_symlink(), f"Required file must not be a symlink: {relative_path}", failures)
+        safety_error = repo_file_safety_error(path)
+        require(safety_error is None, f"Required file is unsafe: {relative_path}: {safety_error}", failures)
 
     if failures:
         return report(failures)
@@ -53,9 +150,9 @@ def main() -> int:
     try:
         with (ROOT / "ios-search-ads-sample/Info.plist").open("rb") as handle:
             plist = plistlib.load(handle)
-        ET.parse(ROOT / "ios-search-ads-sample/Base.lproj/Main.storyboard")
-    except (OSError, plistlib.InvalidFileException, ET.ParseError) as error:
-        failures.append(f"Project metadata must parse: {error}")
+        validate_storyboard_xml(ROOT / "ios-search-ads-sample/Base.lproj/Main.storyboard")
+    except (OSError, plistlib.InvalidFileException, SafeXMLParseError) as error:
+        failures.append(f"Project metadata must parse safely: {error}")
         return report(failures)
 
     project = read("ios-search-ads-sample.xcodeproj/project.pbxproj")
@@ -150,8 +247,9 @@ def main() -> int:
 
     require("MAKEFILE_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))" in makefile and
             'cd "$(MAKEFILE_ROOT)"' in makefile and
+            "python3 -m unittest discover -s tests -p 'test_*.py'" in makefile and
             "scripts/run-xcode-tests.sh" in makefile,
-            "Make targets must derive the checkout root and run native XCTest", failures)
+            "Make targets must derive the checkout root and run Python security tests plus native XCTest", failures)
     require("permissions:\n  contents: read" in check_workflow and
             "persist-credentials: false" in check_workflow and
             "run: make check" in check_workflow,
