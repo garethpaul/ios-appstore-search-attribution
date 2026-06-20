@@ -26,7 +26,6 @@ def main() -> int:
     failures: list[str] = []
     required_files = [
         ".github/workflows/check.yml",
-        ".github/workflows/codeql.yml",
         "Makefile",
         "README.md",
         "SECURITY.md",
@@ -69,7 +68,6 @@ def main() -> int:
     parser_tests = read("ios-search-ads-sampleTests/AttributionResponseParserTests.swift")
     makefile = read("Makefile")
     check_workflow = read(".github/workflows/check.yml")
-    codeql_workflow = read(".github/workflows/codeql.yml")
     documentation = "\n".join([read("README.md"), read("SECURITY.md"), read("VISION.md")])
 
     require(plist.get("CFBundleIdentifier") == "$(PRODUCT_BUNDLE_IDENTIFIER)",
@@ -158,11 +156,6 @@ def main() -> int:
             "persist-credentials: false" in check_workflow and
             "run: make check" in check_workflow,
             "Check workflow must be read-only, credential-free, and canonical", failures)
-    require("languages: [swift]" in codeql_workflow and
-            "github/codeql-action/init@c35d1b164463ee62a100735382aaaa525c5d3496" in codeql_workflow and
-            "github/codeql-action/analyze@c35d1b164463ee62a100735382aaaa525c5d3496" in codeql_workflow,
-            "CodeQL workflow must pin Swift initialization and analysis", failures)
-
     require("AdServices" in documentation and "64 KiB" in documentation and
             "three total attempts" in documentation and "not persisted" in documentation.lower(),
             "Documentation must describe current API, bounds, retry exhaustion, and no persistence", failures)

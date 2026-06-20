@@ -8,4 +8,4 @@ Changes should preserve these ownership boundaries:
 - `AttributionRequestCoordinator` owns one active request, timeout, cancellation, generation checks, and terminal state.
 - `ViewController` owns user intent, lifecycle transitions, accessibility, and main-thread rendering only.
 
-Do not add attribution persistence, general-purpose endpoints, analytics forwarding, response logging, hidden launch requests, or live-network tests. Keep `make check`, native XCTest, hosted Xcode, and Swift CodeQL green. A broader UI or architecture migration should be separate from attribution correctness changes.
+Do not add attribution persistence, general-purpose endpoints, analytics forwarding, response logging, hidden launch requests, or live-network tests. Keep `make check`, native XCTest, hosted Xcode, and the repository's default CodeQL setup green. A broader UI or architecture migration should be separate from attribution correctness changes.

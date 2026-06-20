@@ -11,7 +11,7 @@
 - Added generation-owned cancellation across timeout, navigation, backgrounding,
   duplicate starts, and late completions without caching, persistence, or logging.
 - Added native XCTest with mocked networking, location-independent Make gates,
-  hosted Xcode validation, and pinned Swift CodeQL.
+  hosted Xcode validation, and compatibility with the enabled default CodeQL setup.
 
 ## 2026-06-18
 
