@@ -245,7 +245,7 @@ def main() -> int:
             '"attribution":"true"' in parser_tests,
             "Parser tests must reject non-Boolean attribution lookalikes", failures)
 
-    require("MAKEFILE_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))" in makefile and
+    require("override MAKEFILE_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))" in makefile and
             'cd "$(MAKEFILE_ROOT)"' in makefile and
             "python3 -m unittest discover -s tests -p 'test_*.py'" in makefile and
             "scripts/run-xcode-tests.sh" in makefile,

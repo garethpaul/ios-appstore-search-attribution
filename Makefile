@@ -1,6 +1,6 @@
 .PHONY: build check lint test
 
-MAKEFILE_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+override MAKEFILE_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 lint:
 	cd "$(MAKEFILE_ROOT)" && python3 scripts/check-baseline.py
