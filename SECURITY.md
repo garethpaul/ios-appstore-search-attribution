@@ -1,69 +1,16 @@
-# Security Policy
+# Security and Privacy
 
-## Supported Versions
+Report vulnerabilities privately through GitHub’s security reporting channel when available.
 
-The supported security scope for `ios-appstore-search-attribution` is the current default branch, `master`. Older commits, tags, branches, forks, demos, and generated artifacts are not actively supported unless the repository explicitly marks them as maintained.
+The sample treats the AdServices token and attribution response as sensitive, short-lived data:
 
-Project summary: iOS Appstore Search Attribution Sample App
+- attribution is user-triggered and never requested during launch;
+- the token and response are not persisted, cached, uploaded elsewhere, or logged;
+- the session is ephemeral with cookies, credential storage, and URL caching disabled;
+- only Apple’s fixed HTTPS endpoint is used;
+- request and resource timeouts are bounded;
+- response status, JSON MIME type, 64 KiB size, and strict Boolean schema are validated;
+- only `404` and `500` responses retry, with three total attempts and bounded delays;
+- lifecycle cancellation and request generations reject late or duplicate completions.
 
-## Reporting a Vulnerability
-
-Please report suspected vulnerabilities through GitHub's private vulnerability reporting or by opening a draft GitHub Security Advisory for `garethpaul/ios-appstore-search-attribution` when that option is available. If GitHub does not show a private reporting option for this repository, contact the repository owner through GitHub and avoid posting exploit details publicly until the issue can be assessed.
-
-Do not open a public issue that includes exploit code, secrets, personal data, or detailed reproduction steps for an unpatched vulnerability.
-
-## What to Include
-
-Helpful reports include:
-
-- the affected file, endpoint, permission, dependency, or workflow
-- a concise impact statement explaining what an attacker could do
-- reproduction steps using test data and accounts you control
-- the branch, commit SHA, platform version, device, runtime, or dependency versions used
-- logs, screenshots, or proof-of-concept snippets that demonstrate impact without exposing private data
-
-## Project Security Posture
-
-- This repository appears to be an Apple platform application or Swift sample. The active security scope is the code and documentation on the default branch.
-- Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
-- Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
-- No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
-- Attribution responses can include sensitive device and campaign context. The sample should keep attribution response handling local-only and user-triggered, and should not log, store, upload, or add segment behavior without explicit consent and data-flow documentation.
-- `make check` runs a static baseline that guards plist/storyboard metadata, Swift source inventory, launch-time attribution requests, duplicate request handling, centralized button state handling, in-flight button state, completed state UI, state-specific accessibility text for the local-only attribution action, ADClient response handling, and attribution logging/network/segment regressions when Xcode is unavailable.
-- GitHub Actions runs the static `make check` baseline before review.
-- State-specific accessibility text should stay aligned with requesting,
-  completed, and retry attribution states through the centralized button state
-  helper so assistive technology users receive the same privacy and control
-  signals.
-- Accessibility announcements should stay aligned with those user-triggered
-  state changes.
-- Request generations reject a stale completion or duplicate terminal result
-  before it can overwrite the active attribution state.
-- The pinned macOS workflow uses Python 3.12, read-only repository permissions,
-  and disabled checkout credential persistence. It parses the project and
-  type-checks its Swift sources against the device SDK without launching
-  ADClient or handling attribution payloads.
-
-## Mobile Privacy Notes
-
-If this project requests device permissions such as location, camera, microphone, contacts, Bluetooth, health data, or local storage access, reports should describe the permission involved and whether sensitive data can be accessed, persisted, or transmitted unexpectedly. Please avoid testing against real third-party user data or accounts you do not control.
-
-Reports about attribution handling should describe whether attribution responses can be logged, stored, uploaded, added to segments, inferred without user awareness, or retained longer than the sample's local-only behavior.
-
-## Dependency and Supply Chain Security
-
-Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
-
-## Safe Research Guidelines
-
-Good-faith research is welcome when it stays within these boundaries:
-
-- use only accounts, devices, data, and infrastructure that you own or have explicit permission to test
-- avoid destructive actions, persistence, spam, phishing, social engineering, or denial-of-service testing
-- minimize access to personal data and stop testing immediately if private data is exposed
-- do not exfiltrate secrets or third-party data; report the minimum evidence needed to verify impact
-- keep vulnerability details confidential until the maintainer has assessed the report
-
-## Maintainer Response
-
-The maintainer will review complete reports as availability allows, prioritize issues by exploitability and impact, and coordinate a fix or mitigation when the affected code is still maintained. For sample, archived, or educational repositories, the likely remediation may be documentation, dependency updates, or clearly marking unsupported code rather than a production-style patch release.
+Native tests use `URLProtocol` mocks only. They do not generate a real token or contact Apple. A live physical-device test may expose campaign metadata to the app process; never capture that data in screenshots, logs, crash reports, analytics, or issue attachments.

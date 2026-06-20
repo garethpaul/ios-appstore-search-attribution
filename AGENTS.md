@@ -44,6 +44,8 @@
 - Keep attribution button state-specific accessibility text aligned with the local-only privacy boundary through the centralized button state helper.
 - Keep attribution completion generation-guarded so stale retry completions
   cannot overwrite active request state.
+- Keep attribution request timeout work weakly captured and generation-owned;
+  cancel it before accepted terminal state and reuse the centralized retry path.
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.

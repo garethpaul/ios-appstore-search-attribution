@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import iAd
 
 class ViewController: UIViewController {
 
@@ -18,13 +17,27 @@ class ViewController: UIViewController {
     }
 
     private let attributionButton = UIButton(type: .system)
-    private var attributionRequestInProgress = false
-    private var attributionRequestCompleted = false
-    private var attributionRequestGeneration = 0
+    private lazy var attributionCoordinator = AttributionRequestCoordinator(
+        client: AdServicesAttributionClient())
+    private var lifecycleObservers: [NSObjectProtocol] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureAttributionButton()
+        attributionCoordinator.onStateChange = { [weak self] state in
+            self?.applyAttributionButtonState(for: state, announce: true)
+        }
+        observeApplicationLifecycle()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        attributionCoordinator.cancel()
+    }
+
+    deinit {
+        attributionCoordinator.cancel()
+        lifecycleObservers.forEach(NotificationCenter.default.removeObserver)
     }
 
     private func configureAttributionButton() {
@@ -68,49 +81,48 @@ class ViewController: UIViewController {
         }
     }
 
+    private func applyAttributionButtonState(
+        for state: AttributionRequestCoordinator.State,
+        announce: Bool
+    ) {
+        switch state {
+        case .idle:
+            applyAttributionButtonState(.ready, announce: announce)
+        case .requesting:
+            applyAttributionButtonState(.requesting, announce: announce)
+        case .failed:
+            applyAttributionButtonState(.retry, announce: announce)
+        case .completed:
+            applyAttributionButtonState(.completed, announce: true)
+        }
+    }
+
+    private func observeApplicationLifecycle() {
+        let center = NotificationCenter.default
+        lifecycleObservers.append(center.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.attributionCoordinator.cancel()
+        })
+        lifecycleObservers.append(center.addObserver(
+            forName: UIApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.attributionCoordinator.cancel()
+        })
+    }
+
     @objc private func requestAttribution(_: UIButton) {
-        if attributionRequestInProgress || attributionRequestCompleted {
-            return
-        }
-
-        attributionRequestInProgress = true
-        attributionRequestGeneration += 1
-        let requestGeneration = attributionRequestGeneration
-        applyAttributionButtonState(.requesting, announce: true)
-
-        ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in
-            DispatchQueue.main.async { [weak self] in
-                guard let strongSelf = self else {
-                    return
-                }
-                guard requestGeneration == strongSelf.attributionRequestGeneration,
-                      strongSelf.attributionRequestInProgress else {
-                    return
-                }
-
-                strongSelf.attributionRequestInProgress = false
-                if error != nil {
-                    strongSelf.applyAttributionButtonState(.retry, announce: true)
-                    return
-                }
-
-                if let attributionDict = attributeDetails?["Version3.1"] as? [String: AnyObject] {
-                    if let searchAttribution = attributionDict["iad-attribution"] {
-                        // Keep the attribution result local to this sample.
-                        _ = searchAttribution
-                    }
-                }
-
-                strongSelf.attributionRequestCompleted = true
-                strongSelf.applyAttributionButtonState(.completed, announce: true)
-            }
-        }
+        attributionCoordinator.start()
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        if viewIfLoaded?.window == nil {
+            attributionCoordinator.cancel()
+        }
     }
-
-
 }
