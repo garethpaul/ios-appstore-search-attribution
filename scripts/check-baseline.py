@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import plistlib
 import re
+import stat
 import subprocess
 import sys
 from xml.parsers import expat
@@ -13,11 +14,37 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MAX_STORYBOARD_XML_BYTES = 1024 * 1024
 MAX_STORYBOARD_XML_DEPTH = 256
+MAX_STORYBOARD_XML_ELEMENTS = 50_000
+MAX_STORYBOARD_XML_ATTRIBUTES = 1_024
 XML_CHUNK_BYTES = 64 * 1024
 
 
 class SafeXMLParseError(ValueError):
     pass
+
+
+def repo_file_safety_error(path: Path) -> str | None:
+    try:
+        relative_path = path.relative_to(ROOT)
+    except ValueError:
+        return "path escapes the checkout"
+
+    if any(part in {"", ".", ".."} for part in relative_path.parts):
+        return "path escapes the checkout"
+
+    current = ROOT
+    for part in relative_path.parts:
+        current /= part
+        try:
+            mode = current.lstat().st_mode
+        except OSError as error:
+            return str(error)
+        if stat.S_ISLNK(mode):
+            return f"path traverses symlink: {current.relative_to(ROOT)}"
+
+    if not stat.S_ISREG(mode):
+        return "path is not a regular file"
+    return None
 
 
 def read(relative_path: str) -> str:
@@ -30,19 +57,29 @@ def require(condition: bool, message: str, failures: list[str]) -> None:
 
 
 def validate_storyboard_xml(path: Path) -> None:
-    parser = expat.ParserCreate()
+    safety_error = repo_file_safety_error(path)
+    if safety_error is not None:
+        raise SafeXMLParseError(safety_error)
+
+    parser = expat.ParserCreate(namespace_separator="\x1f")
     depth = 0
+    element_count = 0
     saw_root = False
 
     def reject(message: str) -> None:
         raise SafeXMLParseError(message)
 
     def start_element(_name: str, _attrs: dict[str, str]) -> None:
-        nonlocal depth, saw_root
+        nonlocal depth, element_count, saw_root
         saw_root = True
         depth += 1
+        element_count += 1
         if depth > MAX_STORYBOARD_XML_DEPTH:
             reject(f"XML nesting exceeds {MAX_STORYBOARD_XML_DEPTH} elements")
+        if element_count > MAX_STORYBOARD_XML_ELEMENTS:
+            reject(f"XML contains more than {MAX_STORYBOARD_XML_ELEMENTS} elements")
+        if len(_attrs) > MAX_STORYBOARD_XML_ATTRIBUTES:
+            reject(f"XML element contains more than {MAX_STORYBOARD_XML_ATTRIBUTES} attributes")
 
     def end_element(_name: str) -> None:
         nonlocal depth
@@ -104,8 +141,8 @@ def main() -> int:
     ]
     for relative_path in required_files:
         path = ROOT / relative_path
-        require(path.is_file(), f"Required file missing: {relative_path}", failures)
-        require(not path.is_symlink(), f"Required file must not be a symlink: {relative_path}", failures)
+        safety_error = repo_file_safety_error(path)
+        require(safety_error is None, f"Required file is unsafe: {relative_path}: {safety_error}", failures)
 
     if failures:
         return report(failures)

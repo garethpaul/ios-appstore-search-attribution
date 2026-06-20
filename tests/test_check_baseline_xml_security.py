@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from collections.abc import Callable
 from pathlib import Path
 from unittest import mock
 
@@ -147,6 +148,23 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
 
         self.assertUnsafeXMLRejected(result, stderr)
 
+    def test_rejects_too_many_storyboard_elements(self) -> None:
+        element_count = self.check_baseline.MAX_STORYBOARD_XML_ELEMENTS
+        xml = "<document>" + ("<view/>" * element_count) + "</document>"
+
+        result, _, stderr = self.run_baseline_with_storyboard(xml)
+
+        self.assertUnsafeXMLRejected(result, stderr)
+
+    def test_rejects_too_many_attributes_on_one_element(self) -> None:
+        attribute_count = self.check_baseline.MAX_STORYBOARD_XML_ATTRIBUTES + 1
+        attributes = " ".join(f'a{index}="value"' for index in range(attribute_count))
+        xml = f"<document {attributes}/>"
+
+        result, _, stderr = self.run_baseline_with_storyboard(xml)
+
+        self.assertUnsafeXMLRejected(result, stderr)
+
     def test_reports_malformed_xml_as_safe_metadata_failure(self) -> None:
         xml = """<?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB">
@@ -192,11 +210,62 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
         self.assertEqual(result, 0, stderr)
         self.assertIn("Attribution baseline passed", stdout)
 
+    def test_rejects_unbound_namespace_prefix(self) -> None:
+        result, _, stderr = self.run_baseline_with_storyboard("<ib:document/>")
+
+        self.assertUnsafeXMLRejected(result, stderr)
+
+    def test_rejects_duplicate_attributes_with_same_expanded_name(self) -> None:
+        xml = '<document xmlns:a="urn:storyboard" xmlns:b="urn:storyboard" a:id="1" b:id="2"/>'
+
+        result, _, stderr = self.run_baseline_with_storyboard(xml)
+
+        self.assertUnsafeXMLRejected(result, stderr)
+
+    def test_rejects_storyboard_parent_directory_symlink(self) -> None:
+        def replace_parent_with_symlink(project_root: Path) -> None:
+            storyboard_parent = (project_root / STORYBOARD_PATH).parent
+            external_parent = project_root.parent / "external-storyboard"
+            external_parent.mkdir()
+            shutil.copy2(storyboard_parent / STORYBOARD_PATH.name, external_parent / STORYBOARD_PATH.name)
+            shutil.rmtree(storyboard_parent)
+            storyboard_parent.symlink_to(external_parent, target_is_directory=True)
+
+        result, _, stderr = self.run_baseline_with_storyboard(
+            None,
+            mutate_project=replace_parent_with_symlink,
+        )
+
+        self.assertUnsafePathRejected(result, stderr)
+
+    def test_rejects_storyboard_file_symlink(self) -> None:
+        def replace_file_with_symlink(project_root: Path) -> None:
+            storyboard_path = project_root / STORYBOARD_PATH
+            external_path = project_root.parent / "external-storyboard.xml"
+            shutil.copy2(storyboard_path, external_path)
+            storyboard_path.unlink()
+            storyboard_path.symlink_to(external_path)
+
+        result, _, stderr = self.run_baseline_with_storyboard(
+            None,
+            mutate_project=replace_file_with_symlink,
+        )
+
+        self.assertUnsafePathRejected(result, stderr)
+
     def assertUnsafeXMLRejected(self, result: int, stderr: str) -> None:
         self.assertEqual(result, 1, stderr)
         self.assertIn("Project metadata must parse safely", stderr)
 
-    def run_baseline_with_storyboard(self, storyboard: str | bytes | None) -> tuple[int, str, str]:
+    def assertUnsafePathRejected(self, result: int, stderr: str) -> None:
+        self.assertEqual(result, 1, stderr)
+        self.assertIn("Required file is unsafe", stderr)
+
+    def run_baseline_with_storyboard(
+        self,
+        storyboard: str | bytes | None,
+        mutate_project: Callable[[Path], None] | None = None,
+    ) -> tuple[int, str, str]:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_root = Path(temp_dir) / "repo"
             shutil.copytree(
@@ -210,6 +279,8 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
                     path.write_bytes(storyboard)
                 else:
                     path.write_text(storyboard, encoding="utf-8")
+            if mutate_project is not None:
+                mutate_project(project_root)
 
             xcodebuild_result = subprocess.CompletedProcess(
                 args=["xcodebuild", "-project", "ios-search-ads-sample.xcodeproj", "-list"],
