@@ -1,5 +1,18 @@
 # Changes
 
+## 2026-06-19
+
+- Replaced the retired iAd callback with the current AdServices token and Apple
+  attribution REST flow while retaining safe unsupported behavior before iOS 14.3.
+- Added an ephemeral, credential-free URL session with fixed endpoint ownership,
+  10-second request and 20-second resource timeouts, and a streamed 64 KiB cap.
+- Added strict JSON/MIME/status/Boolean validation, fixed 404 intervals, bounded
+  500 backoff, and three total attempts.
+- Added generation-owned cancellation across timeout, navigation, backgrounding,
+  duplicate starts, and late completions without caching, persistence, or logging.
+- Added native XCTest with mocked networking, location-independent Make gates,
+  hosted Xcode validation, and pinned Swift CodeQL.
+
 ## 2026-06-18
 
 - Added a generation-owned attribution request timeout so a missing ADClient

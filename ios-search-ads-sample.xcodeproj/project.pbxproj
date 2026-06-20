@@ -7,15 +7,32 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2697169E2678128D9912E947 /* AttributionResponseParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7A1908752ABFF97385BE8E /* AttributionResponseParserTests.swift */; };
+		526C487C9EE799F560A7F522 /* AdServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D8E71326136F3BA7D2F74CF /* AdServices.framework */; };
+		6D5205DC8B23ADBF005B2F7E /* AttributionRequestCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF2115B6D3F79F6C214C5A7 /* AttributionRequestCoordinatorTests.swift */; };
 		7F0A5B941D1214B500128EFA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F0A5B931D1214B500128EFA /* AppDelegate.swift */; };
 		7F0A5B961D1214B500128EFA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F0A5B951D1214B500128EFA /* ViewController.swift */; };
 		7F0A5B991D1214B500128EFA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7F0A5B971D1214B500128EFA /* Main.storyboard */; };
 		7F0A5B9B1D1214B500128EFA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7F0A5B9A1D1214B500128EFA /* Assets.xcassets */; };
 		7F0A5B9E1D1214B500128EFA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7F0A5B9C1D1214B500128EFA /* LaunchScreen.storyboard */; };
-		7F0A5BA81D1214E000128EFA /* iAd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F0A5BA71D1214E000128EFA /* iAd.framework */; };
+		97C10751761F6A2DE1E8A957 /* AttributionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA15D04172D592713AC0A9FE /* AttributionClient.swift */; };
+		ACFB01EA3EBE8A34C48F93DC /* AdServicesAttributionClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78A549F0BF831D49C548CD8 /* AdServicesAttributionClientTests.swift */; };
+		F6F635C5C1EE2A3B349B794F /* AttributionRequestCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5572F19A1BEDC7C605136454 /* AttributionRequestCoordinator.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		0520D697121736B43FA02D48 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7F0A5B881D1214B500128EFA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7F0A5B8F1D1214B500128EFA;
+			remoteInfo = "ios-search-ads-sample";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		5572F19A1BEDC7C605136454 /* AttributionRequestCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttributionRequestCoordinator.swift; sourceTree = "<group>"; };
+		6D8E71326136F3BA7D2F74CF /* AdServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdServices.framework; path = System/Library/Frameworks/AdServices.framework; sourceTree = SDKROOT; };
 		7F0A5B901D1214B500128EFA /* ios-search-ads-sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-search-ads-sample.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F0A5B931D1214B500128EFA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7F0A5B951D1214B500128EFA /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -24,15 +41,26 @@
 		7F0A5B9D1D1214B500128EFA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7F0A5B9F1D1214B500128EFA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7F0A5BA61D1214E000128EFA /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
-		7F0A5BA71D1214E000128EFA /* iAd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iAd.framework; path = System/Library/Frameworks/iAd.framework; sourceTree = SDKROOT; };
+		BA15D04172D592713AC0A9FE /* AttributionClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttributionClient.swift; sourceTree = "<group>"; };
+		E78A549F0BF831D49C548CD8 /* AdServicesAttributionClientTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AdServicesAttributionClientTests.swift; sourceTree = "<group>"; };
+		EC706C9C0030BD294FFF03E9 /* ios-search-ads-sampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ios-search-ads-sampleTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFF2115B6D3F79F6C214C5A7 /* AttributionRequestCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttributionRequestCoordinatorTests.swift; sourceTree = "<group>"; };
+		FB7A1908752ABFF97385BE8E /* AttributionResponseParserTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttributionResponseParserTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		061691C1F9853BE7F13C83E5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7F0A5B8D1D1214B500128EFA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7F0A5BA81D1214E000128EFA /* iAd.framework in Frameworks */,
+				526C487C9EE799F560A7F522 /* AdServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,6 +73,7 @@
 				7F0A5B921D1214B500128EFA /* ios-search-ads-sample */,
 				7F0A5B911D1214B500128EFA /* Products */,
 				7F0A5BA51D1214E000128EFA /* Frameworks */,
+				E03DD83F8DD9D6D7E72640F3 /* ios-search-ads-sampleTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -52,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				7F0A5B901D1214B500128EFA /* ios-search-ads-sample.app */,
+				EC706C9C0030BD294FFF03E9 /* ios-search-ads-sampleTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -65,6 +95,8 @@
 				7F0A5B9A1D1214B500128EFA /* Assets.xcassets */,
 				7F0A5B9C1D1214B500128EFA /* LaunchScreen.storyboard */,
 				7F0A5B9F1D1214B500128EFA /* Info.plist */,
+				BA15D04172D592713AC0A9FE /* AttributionClient.swift */,
+				5572F19A1BEDC7C605136454 /* AttributionRequestCoordinator.swift */,
 			);
 			path = "ios-search-ads-sample";
 			sourceTree = "<group>";
@@ -73,9 +105,28 @@
 			isa = PBXGroup;
 			children = (
 				7F0A5BA61D1214E000128EFA /* AdSupport.framework */,
-				7F0A5BA71D1214E000128EFA /* iAd.framework */,
+				DEE9D811EAAB38692CF1064A /* iOS */,
+				6D8E71326136F3BA7D2F74CF /* AdServices.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DEE9D811EAAB38692CF1064A /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		E03DD83F8DD9D6D7E72640F3 /* ios-search-ads-sampleTests */ = {
+			isa = PBXGroup;
+			children = (
+				FB7A1908752ABFF97385BE8E /* AttributionResponseParserTests.swift */,
+				EFF2115B6D3F79F6C214C5A7 /* AttributionRequestCoordinatorTests.swift */,
+				E78A549F0BF831D49C548CD8 /* AdServicesAttributionClientTests.swift */,
+			);
+			name = "ios-search-ads-sampleTests";
+			path = "ios-search-ads-sampleTests";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -97,6 +148,24 @@
 			productName = "ios-search-ads-sample";
 			productReference = 7F0A5B901D1214B500128EFA /* ios-search-ads-sample.app */;
 			productType = "com.apple.product-type.application";
+		};
+		88E1B76F012175A9FE86941F /* ios-search-ads-sampleTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F9D4A2101F3C78E0E04FB57 /* Build configuration list for PBXNativeTarget "ios-search-ads-sampleTests" */;
+			buildPhases = (
+				EE5A1F81505CCD63EEDE40B7 /* Sources */,
+				061691C1F9853BE7F13C83E5 /* Frameworks */,
+				9ED1BB7B8EB83562CA40BE6B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CB77FA894766183CBEFBE904 /* PBXTargetDependency */,
+			);
+			name = "ios-search-ads-sampleTests";
+			productName = "ios-search-ads-sampleTests";
+			productReference = EC706C9C0030BD294FFF03E9 /* ios-search-ads-sampleTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -130,6 +199,7 @@
 			projectRoot = "";
 			targets = (
 				7F0A5B8F1D1214B500128EFA /* ios-search-ads-sample */,
+				88E1B76F012175A9FE86941F /* ios-search-ads-sampleTests */,
 			);
 		};
 /* End PBXProject section */
@@ -145,6 +215,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9ED1BB7B8EB83562CA40BE6B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -154,10 +231,31 @@
 			files = (
 				7F0A5B961D1214B500128EFA /* ViewController.swift in Sources */,
 				7F0A5B941D1214B500128EFA /* AppDelegate.swift in Sources */,
+				97C10751761F6A2DE1E8A957 /* AttributionClient.swift in Sources */,
+				F6F635C5C1EE2A3B349B794F /* AttributionRequestCoordinator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EE5A1F81505CCD63EEDE40B7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2697169E2678128D9912E947 /* AttributionResponseParserTests.swift in Sources */,
+				6D5205DC8B23ADBF005B2F7E /* AttributionRequestCoordinatorTests.swift in Sources */,
+				ACFB01EA3EBE8A34C48F93DC /* AdServicesAttributionClientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CB77FA894766183CBEFBE904 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "ios-search-ads-sample";
+			target = 7F0A5B8F1D1214B500128EFA /* ios-search-ads-sample */;
+			targetProxy = 0520D697121736B43FA02D48 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		7F0A5B971D1214B500128EFA /* Main.storyboard */ = {
@@ -179,6 +277,37 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		473510561D2B5032C73A9B9C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gpj.ios-search-ads-sampleTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ios-search-ads-sample.app/ios-search-ads-sample";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		60CC983642ADAB7BC32B33DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gpj.ios-search-ads-sampleTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ios-search-ads-sample.app/ios-search-ads-sample";
+			};
+			name = Debug;
+		};
 		7F0A5BA01D1214B500128EFA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -311,6 +440,15 @@
 				7F0A5BA41D1214B500128EFA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+		};
+		8F9D4A2101F3C78E0E04FB57 /* Build configuration list for PBXNativeTarget "ios-search-ads-sampleTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				473510561D2B5032C73A9B9C /* Release */,
+				60CC983642ADAB7BC32B33DB /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

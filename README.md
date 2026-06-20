@@ -1,141 +1,37 @@
 # ios-appstore-search-attribution
 
-<!-- README-OVERVIEW-IMAGE -->
-![Project overview](docs/readme-overview.svg)
+Small iOS sample for explicitly requesting Apple Ads attribution without logging or persisting the token or response.
 
-## Overview
+## Current Flow
 
-`garethpaul/ios-appstore-search-attribution` is an Apple platform application or Swift sample. iOS Appstore Search Attribution Sample App
+- The user taps **Request Attribution**; the app never requests attribution at launch.
+- `AAAttribution.attributionToken()` produces the short-lived token on iOS 14.3 or later.
+- An ephemeral `URLSession` posts that token to `https://api-adservices.apple.com/api/v1/` as `text/plain` and accepts only a `200` JSON response.
+- The response body is streamed with a 64 KiB limit and decoded with a strict Boolean `attribution` field. Numeric and string lookalikes are rejected.
+- A `404` retries at Apple’s documented five-second interval. A `500` uses bounded 5- then 10-second backoff. Both stop after three total attempts.
+- Tokens and attribution records remain memory-only, are not persisted or cached, and are never printed.
 
-This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: Swift (2).
+The request coordinator owns one active request, a 30-second UI deadline, generation invalidation, duplicate-completion rejection, and lifecycle cancellation. Leaving the screen, backgrounding the app, or timing out cancels active work and prevents late callbacks from changing the UI.
 
-## Repository Contents
+## Requirements
 
-- `CHANGES.md` - concise history of maintenance changes
-- `Makefile` - local verification entry point
-- `README.md` - project overview and local usage notes
-- `ios-search-ads-sample` - source or example code
-- `ios-search-ads-sample.xcodeproj` - Xcode project file
-- `SECURITY.md` - security reporting and disclosure guidance
-- `scripts/check-baseline.py` - static attribution privacy verifier
-- `VISION.md` - project direction and maintenance guardrails
+- Xcode with an available iPhone simulator
+- Python 3
+- iOS 14.3 or later for a live AdServices token; the project retains an iOS 12 deployment target so older systems fail safely as unsupported
 
-Additional scan context:
-
-- Source directories: ios-search-ads-sample
-- Dependency and build manifests: none detected
-- Entry points or build surfaces: `make check`, ios-search-ads-sample.xcodeproj
-- Test-looking files: no obvious test files detected
-
-## Getting Started
-
-### Prerequisites
-
-- Git
-- macOS with Xcode for building Apple platform projects
-- Python 3 for local static verification on non-macOS hosts
-
-### Setup
+## Verification
 
 ```bash
-git clone https://github.com/garethpaul/ios-appstore-search-attribution.git
-cd ios-appstore-search-attribution
-make lint
-make test
-make build
-make check
+make lint   # static architecture and policy checks
+make test   # native XCTest with mocked URLProtocol networking
+make build  # unsigned simulator build
+make check  # static checks plus XCTest
 ```
 
-The setup commands above validate the static baseline. Full attribution behavior still needs a compatible iOS environment and Apple framework support.
+All Make targets derive the repository root, so they can be invoked from another working directory. XCTest covers request construction, strict schema parsing, status/MIME/size rejection, retry exhaustion and backoff, cancellation, timeouts, stale completions, duplicate starts, and main-thread UI state ownership. Tests make no live Apple network calls.
 
-## Running or Using the Project
+GitHub Actions runs `make check` on macOS and a separate pinned Swift CodeQL workflow.
 
-- Open `ios-search-ads-sample.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
-- Tap the attribution button in the sample app to request Search Ads attribution
-  data through `ADClient`; the centralized button state helper shows an
-  in-flight disabled state, the response stays local-only, and completion UI
-  updates return to the main queue.
-- Do not log, store, upload, or add segment behavior for attribution responses without a dedicated privacy design and user consent.
+## Live Validation
 
-## Testing and Verification
-
-Run the local static baseline:
-
-```bash
-make lint
-make test
-make build
-make check
-```
-
-The `lint`, `test`, and `build` targets intentionally alias the canonical baseline
-on hosts without Xcode, so the standard local gate commands
-stay available while preserving the single source of truth.
-
-The baseline runs `scripts/check-baseline.py`, parses plist/storyboard/project XML, checks the Swift 5 and iOS 12 project context, verifies the user-triggered ADClient request flow, requires the centralized button state helper, requires the in-flight disabled button title, keeps the completed state disabled, keeps attribution completion UI updates on the main queue, requires state-specific accessibility text and accessibility announcements for the local-only attribution action, and guards against launch-time attribution requests, duplicate requests, attribution logging, storage, network upload, or segment updates.
-Request generations reject a stale completion from an earlier retry or a
-duplicate terminal result before it can overwrite the active button state.
-A request timeout returns a stalled generation to retry state, cancels its
-pending deadline work, and leaves any late completion unable to overwrite a
-newer request.
-A malformed attribution response that omits `Version3.1` or supplies a
-non-Boolean `iad-attribution` stays retryable instead of disabling the button
-as completed. Both Boolean values, `true` and `false`, remain local and valid.
-
-The pinned, credential-free GitHub Actions check sets up Python 3.12 and runs
-`make check` on `macos-15`. The baseline parses the project and type-checks both
-Swift sources against the current iOS device SDK. It does not launch the app,
-call ADClient, inspect attribution responses, or claim that the deprecated iAd
-API works on current iOS releases. Current iOS SDKs expose the deprecated iAd
-module for compilation but no longer provide the `ADClient` implementation
-needed to link an executable, so runtime/link verification requires an older
-compatible SDK or a separate migration to AdServices.
-
-For runtime verification on macOS, launch the sample on a compatible device or
-simulator and exercise the explicit attribution button without retaining the
-returned payload.
-
-When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
-
-## Configuration and Secrets
-
-- No required secret or credential file was identified in the repository scan. If you add integrations later, keep secrets out of git.
-
-## Security and Privacy Notes
-
-- Review changes touching network requests, sockets, or service endpoints; examples from the scan include ios-search-ads-sample/Info.plist.
-- Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include ios-search-ads-sample/Info.plist.
-- Attribution responses can contain sensitive device and campaign context. Keep attribution response handling local-only, user-triggered, and documented.
-- Keep attribution button state-specific accessibility text aligned with the
-  local-only privacy boundary through the centralized button state helper.
-- Keep accessibility announcements aligned with user-triggered attribution state
-  changes.
-- Keep attribution completion generation-guarded across retries.
-- Keep malformed attribution response handling retryable and local-only.
-- Require the `iad-attribution` field to be Boolean; both `true` and `false`
-  are valid without logging, storage, or transmission.
-
-## Maintenance Notes
-
-- Every Make verification target derives the checkout root from the loaded
-  Makefile, so an absolute Makefile path works from any working directory.
-- This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
-- See `SECURITY.md` for vulnerability reporting and safe research guidance.
-- See `VISION.md` for project direction and contribution guardrails.
-- See `docs/plans/2026-06-09-attribution-completed-state.md` for the attribution completed state guardrail.
-- See `docs/plans/2026-06-09-attribution-accessibility-affordance.md` for the attribution accessibility guardrail.
-- See `docs/plans/2026-06-09-attribution-accessibility-state.md` for the attribution state-specific accessibility guardrail.
-- See `docs/plans/2026-06-09-attribution-accessibility-announcements.md` for
-  attribution state accessibility announcements.
-- See `docs/plans/2026-06-09-attribution-button-state-helper.md` for the centralized button state guardrail.
-- See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
-- See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
-- See `docs/plans/2026-06-10-hosted-project-validation.md` for hosted project validation.
-- See `docs/plans/2026-06-10-swift-5-device-sdk-typecheck.md` for device-SDK type-checking.
-- See `docs/plans/2026-06-13-attribution-payload-validation.md` for required
-  response-shape validation.
-- Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, plist/storyboard files, project metadata, or attribution behavior.
-
-## Contributing
-
-Keep changes small and tied to the project that is already present in this repository. For code changes, document the toolchain used, avoid committing generated dependency directories or local configuration, and update this README when setup or verification steps change.
+Live attribution cannot be proven in the simulator. Use a signed App Store-distributed build on a physical device, with a real Apple Ads campaign and Apple’s propagation window. Do not add token, payload, campaign, or device logging when diagnosing live behavior.

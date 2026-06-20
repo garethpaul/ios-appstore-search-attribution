@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import iAd
 
 class ViewController: UIViewController {
 
@@ -18,15 +17,27 @@ class ViewController: UIViewController {
     }
 
     private let attributionButton = UIButton(type: .system)
-    private var attributionRequestInProgress = false
-    private var attributionRequestCompleted = false
-    private var attributionRequestGeneration = 0
-    private let attributionRequestTimeoutInterval: TimeInterval = 30.0
-    private var attributionRequestTimeoutWorkItem: DispatchWorkItem?
+    private lazy var attributionCoordinator = AttributionRequestCoordinator(
+        client: AdServicesAttributionClient())
+    private var lifecycleObservers: [NSObjectProtocol] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureAttributionButton()
+        attributionCoordinator.onStateChange = { [weak self] state in
+            self?.applyAttributionButtonState(for: state, announce: true)
+        }
+        observeApplicationLifecycle()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        attributionCoordinator.cancel()
+    }
+
+    deinit {
+        attributionCoordinator.cancel()
+        lifecycleObservers.forEach(NotificationCenter.default.removeObserver)
     }
 
     private func configureAttributionButton() {
@@ -70,69 +81,48 @@ class ViewController: UIViewController {
         }
     }
 
-    private func finishAttributionRequest(generation: Int, succeeded: Bool) {
-        guard generation == attributionRequestGeneration,
-              attributionRequestInProgress else {
-            return
-        }
-
-        attributionRequestTimeoutWorkItem?.cancel()
-        attributionRequestTimeoutWorkItem = nil
-        attributionRequestInProgress = false
-
-        if succeeded {
-            attributionRequestCompleted = true
+    private func applyAttributionButtonState(
+        for state: AttributionRequestCoordinator.State,
+        announce: Bool
+    ) {
+        switch state {
+        case .idle:
+            applyAttributionButtonState(.ready, announce: announce)
+        case .requesting:
+            applyAttributionButtonState(.requesting, announce: announce)
+        case .failed:
+            applyAttributionButtonState(.retry, announce: announce)
+        case .completed:
             applyAttributionButtonState(.completed, announce: true)
-        } else {
-            applyAttributionButtonState(.retry, announce: true)
         }
     }
 
-    private func scheduleAttributionRequestTimeout(generation: Int) {
-        let timeoutWorkItem = DispatchWorkItem { [weak self] in
-            self?.finishAttributionRequest(generation: generation, succeeded: false)
-        }
-        attributionRequestTimeoutWorkItem = timeoutWorkItem
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + attributionRequestTimeoutInterval,
-            execute: timeoutWorkItem)
+    private func observeApplicationLifecycle() {
+        let center = NotificationCenter.default
+        lifecycleObservers.append(center.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.attributionCoordinator.cancel()
+        })
+        lifecycleObservers.append(center.addObserver(
+            forName: UIApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.attributionCoordinator.cancel()
+        })
     }
 
     @objc private func requestAttribution(_: UIButton) {
-        if attributionRequestInProgress || attributionRequestCompleted {
-            return
-        }
-
-        attributionRequestInProgress = true
-        attributionRequestGeneration += 1
-        let requestGeneration = attributionRequestGeneration
-        applyAttributionButtonState(.requesting, announce: true)
-        scheduleAttributionRequestTimeout(generation: requestGeneration)
-
-        ADClient.shared().requestAttributionDetails { [weak self] attributeDetails, error in
-            let requestSucceeded: Bool
-            if error == nil,
-               let attributionDict = attributeDetails?["Version3.1"] as? [String: AnyObject],
-               let searchAttribution = attributionDict["iad-attribution"] as? Bool {
-                // Keep the attribution result local to this sample.
-                _ = searchAttribution
-                requestSucceeded = true
-            } else {
-                requestSucceeded = false
-            }
-
-            DispatchQueue.main.async { [weak self] in
-                self?.finishAttributionRequest(
-                    generation: requestGeneration,
-                    succeeded: requestSucceeded)
-            }
-        }
+        attributionCoordinator.start()
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        if viewIfLoaded?.window == nil {
+            attributionCoordinator.cancel()
+        }
     }
-
-
 }

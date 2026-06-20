@@ -1,8 +1,16 @@
 .PHONY: build check lint test
 
-ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+MAKEFILE_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-lint test build: check
+lint:
+	cd "$(MAKEFILE_ROOT)" && python3 scripts/check-baseline.py
+
+test:
+	cd "$(MAKEFILE_ROOT)" && scripts/run-xcode-tests.sh
+
+build:
+	cd "$(MAKEFILE_ROOT)" && xcodebuild build -project ios-search-ads-sample.xcodeproj -scheme ios-search-ads-sample -sdk iphonesimulator -derivedDataPath "$${TMPDIR:-/tmp}/ios-attribution-build" CODE_SIGNING_ALLOWED=NO
 
 check:
-	@python3 "$(ROOT)/scripts/check-baseline.py"
+	cd "$(MAKEFILE_ROOT)" && python3 scripts/check-baseline.py
+	cd "$(MAKEFILE_ROOT)" && scripts/run-xcode-tests.sh
