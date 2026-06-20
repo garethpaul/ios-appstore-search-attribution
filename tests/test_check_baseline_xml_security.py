@@ -41,12 +41,12 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
         self.assertIn("python3 -m unittest discover -s tests -p 'test_*.py'", makefile)
 
     def test_rejects_doctype_with_external_file_entity(self) -> None:
-        with tempfile.TemporaryDirectory() as secret_dir:
-            secret_file = Path(secret_dir) / "baseline-xxe-secret.txt"
-            secret_file.write_text("SHOULD_NOT_LEAK", encoding="utf-8")
+        with tempfile.TemporaryDirectory() as external_dir:
+            external_path = Path(external_dir) / "external-entity-sentinel.txt"
+            external_path.write_text("EXTERNAL_ENTITY_SENTINEL", encoding="utf-8")
             xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE document [
-  <!ENTITY xxe SYSTEM "file://{secret_file}">
+  <!ENTITY xxe SYSTEM "file://{external_path}">
 ]>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB">
   &xxe;
@@ -56,7 +56,7 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
             result, _, stderr = self.run_baseline_with_storyboard(xml)
 
         self.assertUnsafeXMLRejected(result, stderr)
-        self.assertNotIn("SHOULD_NOT_LEAK", stderr)
+        self.assertNotIn("EXTERNAL_ENTITY_SENTINEL", stderr)
 
     def test_rejects_external_network_entity_attempt(self) -> None:
         xml = """<?xml version="1.0" encoding="UTF-8"?>
