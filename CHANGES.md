@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-21
+
+- Made the portable attribution baseline explicitly skip Xcode project parsing
+  when `xcodebuild` is unavailable while keeping full native XCTest mandatory.
+- Added a regression proving Linux lint does not attempt an unavailable Xcode
+  subprocess while hosted macOS remains responsible for full `make check`.
+
 ## 2026-06-19
 
 - Replaced the retired iAd callback with the current AdServices token and Apple

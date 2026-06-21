@@ -41,6 +41,52 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
 
         self.assertIn("python3 -m unittest discover -s tests -p 'test_*.py'", makefile)
 
+    def test_skips_project_parse_when_xcodebuild_is_unavailable(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(self.check_baseline.shutil, "which", return_value=None),
+            mock.patch.object(
+                self.check_baseline.subprocess,
+                "run",
+                side_effect=AssertionError("xcodebuild attempted"),
+            ),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            result = self.check_baseline.main()
+
+        self.assertEqual(result, 0, stderr.getvalue())
+        self.assertIn("Skipping xcodebuild project parse", stdout.getvalue())
+        self.assertIn("Attribution baseline passed", stdout.getvalue())
+
+    def test_rejects_project_parse_failure_when_xcodebuild_is_available(self) -> None:
+        project_result = subprocess.CompletedProcess(
+            args=["/usr/bin/xcodebuild", "-project", "ios-search-ads-sample.xcodeproj", "-list"],
+            returncode=65,
+            stdout="project parse failed",
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(
+                self.check_baseline.shutil,
+                "which",
+                return_value="/usr/bin/xcodebuild",
+            ),
+            mock.patch.object(
+                self.check_baseline.subprocess,
+                "run",
+                return_value=project_result,
+            ),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            result = self.check_baseline.main()
+
+        self.assertEqual(result, 1)
+        self.assertIn("xcodebuild must load the app and XCTest targets", stderr.getvalue())
+
     def test_rejects_doctype_with_external_file_entity(self) -> None:
         with tempfile.TemporaryDirectory() as external_dir:
             external_path = Path(external_dir) / "external-entity-sentinel.txt"
@@ -291,6 +337,11 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
             stderr = io.StringIO()
             with (
                 mock.patch.object(self.check_baseline, "ROOT", project_root),
+                mock.patch.object(
+                    self.check_baseline.shutil,
+                    "which",
+                    return_value="/usr/bin/xcodebuild",
+                ),
                 mock.patch.object(self.check_baseline.subprocess, "run", return_value=xcodebuild_result),
                 contextlib.redirect_stdout(stdout),
                 contextlib.redirect_stderr(stderr),
