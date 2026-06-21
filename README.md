@@ -29,6 +29,9 @@ make check  # static checks plus XCTest
 ```
 
 All Make targets derive the repository root, so they can be invoked from another working directory. XCTest covers request construction, strict schema parsing, status/MIME/size rejection, retry exhaustion and backoff, cancellation, timeouts, stale completions, duplicate starts, and main-thread UI state ownership. Tests make no live Apple network calls.
+`make lint` remains available on hosts without Xcode; it runs the static policy
+and metadata checks and reports that Xcode project listing was skipped. The
+`test`, `build`, and `check` targets continue to require Xcode.
 
 GitHub Actions runs `make check` on macOS. The repository's enabled GitHub
 default CodeQL setup provides hosted code scanning without a conflicting

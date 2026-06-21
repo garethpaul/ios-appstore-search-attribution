@@ -41,6 +41,21 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
 
         self.assertIn("python3 -m unittest discover -s tests -p 'test_*.py'", makefile)
 
+    def test_baseline_skips_project_listing_without_xcode(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(self.check_baseline.shutil, "which", return_value=None),
+            mock.patch.object(self.check_baseline.subprocess, "run") as run,
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            result = self.check_baseline.main()
+
+        self.assertEqual(result, 0, stderr.getvalue())
+        self.assertIn("xcodebuild unavailable; skipped Xcode project listing", stdout.getvalue())
+        run.assert_not_called()
+
     def test_rejects_doctype_with_external_file_entity(self) -> None:
         with tempfile.TemporaryDirectory() as external_dir:
             external_path = Path(external_dir) / "external-entity-sentinel.txt"
@@ -291,6 +306,7 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
             stderr = io.StringIO()
             with (
                 mock.patch.object(self.check_baseline, "ROOT", project_root),
+                mock.patch.object(self.check_baseline.shutil, "which", return_value="/usr/bin/xcodebuild"),
                 mock.patch.object(self.check_baseline.subprocess, "run", return_value=xcodebuild_result),
                 contextlib.redirect_stdout(stdout),
                 contextlib.redirect_stderr(stderr),

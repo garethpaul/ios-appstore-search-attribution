@@ -1,5 +1,9 @@
 # Changes
 
+- Kept the static `make lint` baseline runnable on non-macOS hosts by skipping
+  Xcode project listing only when `xcodebuild` is unavailable; native test,
+  build, and combined check targets still require Xcode.
+
 ## 2026-06-19
 
 - Replaced the retired iAd callback with the current AdServices token and Apple
