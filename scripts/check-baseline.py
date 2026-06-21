@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import plistlib
 import re
+import shutil
 import stat
 import subprocess
 import sys
@@ -258,16 +259,24 @@ def main() -> int:
             "three total attempts" in documentation and "not persisted" in documentation.lower(),
             "Documentation must describe current API, bounds, retry exhaustion, and no persistence", failures)
 
-    project_result = subprocess.run(
-        ["xcodebuild", "-project", "ios-search-ads-sample.xcodeproj", "-list"],
-        cwd=ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        check=False,
-    )
-    require(project_result.returncode == 0 and "ios-search-ads-sampleTests" in project_result.stdout,
-            "xcodebuild must load the app and XCTest targets", failures)
+    xcodebuild = shutil.which("xcodebuild")
+    if xcodebuild is None:
+        print("Skipping xcodebuild project parse: xcodebuild is not installed.")
+    else:
+        project_result = subprocess.run(
+            [xcodebuild, "-project", "ios-search-ads-sample.xcodeproj", "-list"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
+        require(
+            project_result.returncode == 0
+            and "ios-search-ads-sampleTests" in project_result.stdout,
+            "xcodebuild must load the app and XCTest targets",
+            failures,
+        )
 
     return report(failures)
 
