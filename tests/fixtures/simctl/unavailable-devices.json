@@ -1,0 +1,24 @@
+{
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-18-2": [
+      {
+        "isAvailable": false,
+        "name": "iPhone 16 Pro",
+        "state": "Booted",
+        "udid": "UNAVAILABLE-BOOTED-IPHONE"
+      },
+      {
+        "isAvailable": true,
+        "name": "Apple TV",
+        "state": "Booted",
+        "udid": "AVAILABLE-NON-IPHONE"
+      },
+      {
+        "isAvailable": true,
+        "name": "iPhone 16",
+        "state": "Shutdown",
+        "udid": "AVAILABLE-IPHONE"
+      }
+    ]
+  }
+}
