@@ -1,0 +1,18 @@
+{
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-18-2": [
+      {
+        "isAvailable": false,
+        "name": "iPhone 16",
+        "state": "Shutdown",
+        "udid": "UNAVAILABLE-IPHONE"
+      },
+      {
+        "isAvailable": true,
+        "name": "iPad Pro (13-inch)",
+        "state": "Shutdown",
+        "udid": "AVAILABLE-IPAD"
+      }
+    ]
+  }
+}

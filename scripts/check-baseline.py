@@ -137,8 +137,10 @@ def main() -> int:
         "ios-search-ads-sampleTests/AdServicesAttributionClientTests.swift",
         "ios-search-ads-sampleTests/AttributionRequestCoordinatorTests.swift",
         "ios-search-ads-sampleTests/AttributionResponseParserTests.swift",
+        "scripts/select-simulator.py",
         "scripts/run-xcode-tests.sh",
         "tests/test_check_baseline_xml_security.py",
+        "tests/test_simulator_selection.py",
     ]
     for relative_path in required_files:
         path = ROOT / relative_path
@@ -166,6 +168,7 @@ def main() -> int:
     parser_tests = read("ios-search-ads-sampleTests/AttributionResponseParserTests.swift")
     makefile = read("Makefile")
     check_workflow = read(".github/workflows/check.yml")
+    xcode_test_runner = read("scripts/run-xcode-tests.sh")
     documentation = "\n".join([read("README.md"), read("SECURITY.md"), read("VISION.md")])
 
     require(plist.get("CFBundleIdentifier") == "$(PRODUCT_BUNDLE_IDENTIFIER)",
@@ -251,6 +254,9 @@ def main() -> int:
             "python3 -m unittest discover -s tests -p 'test_*.py'" in makefile and
             "scripts/run-xcode-tests.sh" in makefile,
             "Make targets must derive the checkout root and run Python security tests plus native XCTest", failures)
+    require('xcrun simctl list devices available -j | python3 -I "$ROOT/scripts/select-simulator.py"'
+            in xcode_test_runner,
+            "Simulator selection must use the isolated helper", failures)
     require("permissions:\n  contents: read" in check_workflow and
             "persist-credentials: false" in check_workflow and
             "run: make check" in check_workflow,

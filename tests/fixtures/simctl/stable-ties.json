@@ -1,0 +1,24 @@
+{
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-18-2": [
+      {
+        "isAvailable": true,
+        "name": "iPhone 16 Pro",
+        "state": "Shutdown",
+        "udid": "ZZZ-UDID"
+      },
+      {
+        "isAvailable": true,
+        "name": "iPhone 16",
+        "state": "Shutdown",
+        "udid": "BBB-UDID"
+      },
+      {
+        "isAvailable": true,
+        "name": "iPhone 16",
+        "state": "Shutdown",
+        "udid": "AAA-UDID"
+      }
+    ]
+  }
+}
