@@ -23,7 +23,8 @@ Attribution requests now reject every HTTP redirect so URLSession cannot forward
 - Hostile redirect-following mutation — rejected by the portable baseline suite.
 - Full local `make check` — reached the documented native-test boundary and stopped because Xcode is unavailable.
 - First hosted native XCTest — exposed that URLProtocol redirect simulation never completed the task; replaced with a direct policy test.
-- Updated native XCTest — pending hosted macOS/Xcode verification.
+- Updated hosted native XCTest and unsigned simulator build — passed on the exact PR head after replacing the incomplete URLProtocol harness.
+- CodeQL for Actions and Python — passed.
 
 ### Bugs / findings
 - P1: default URLSession redirect handling could move the attribution POST beyond Apple's fixed endpoint.
@@ -32,7 +33,7 @@ Attribution requests now reject every HTTP redirect so URLSession cannot forward
 - None; hosted Xcode verification is available on the PR.
 
 ### Next action
-- Open the PR for native hosted verification and Codex review, then merge only if both are clean.
+- Merge the exact reviewed head, persist repository intelligence, and continue to the next unexplored project.
 
 ## 2026-06-21
 

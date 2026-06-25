@@ -26,5 +26,5 @@ including the short-lived attribution token, to a different origin.
 - Root and external-directory portable baselines plus 35 Python tests pass locally.
 - A hostile mutation that follows the redirect is rejected by the portable baseline.
 - The first hosted URLProtocol redirect simulation timed out without completing; the replacement test directly exercises the policy without a mock-loader lifecycle dependency.
-- Native XCTest and unsigned simulator build are required on hosted macOS before merge.
+- Native XCTest and the unsigned simulator build passed on hosted macOS after the deterministic policy-test correction.
 - No real attribution token was generated and no live Apple request was made.
