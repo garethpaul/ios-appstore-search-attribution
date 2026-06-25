@@ -137,6 +137,7 @@ def main() -> int:
         "ios-search-ads-sampleTests/AdServicesAttributionClientTests.swift",
         "ios-search-ads-sampleTests/AttributionRequestCoordinatorTests.swift",
         "ios-search-ads-sampleTests/AttributionResponseParserTests.swift",
+        "docs/plans/2026-06-25-attribution-redirect-rejection.md",
         "scripts/select-simulator.py",
         "scripts/run-xcode-tests.sh",
         "tests/test_check_baseline_xml_security.py",
@@ -222,6 +223,9 @@ def main() -> int:
         "JSONDecoder().decode(Payload.self",
         "let attribution: Bool",
         "URLSessionDataDelegate",
+        "AttributionRedirectPolicy.redirectedRequest(newRequest)",
+        "willPerformHTTPRedirection",
+        "return nil",
     ]:
         require(evidence in client, f"Attribution client invariant missing: {evidence}", failures)
     require("URLSession.shared" not in client and "cachedResponse" not in client,
@@ -241,8 +245,9 @@ def main() -> int:
     ]:
         require(evidence in coordinator, f"Coordinator ownership invariant missing: {evidence}", failures)
 
-    require(network_tests.count("func test") >= 6 and "MockURLProtocol" in network_tests,
-            "Network tests must cover request, retry, cancellation, and resource boundaries with URLProtocol", failures)
+    require(network_tests.count("func test") >= 7 and "MockURLProtocol" in network_tests and
+            "testRedirectPolicyRejectsTokenBearingRequest" in network_tests,
+            "Network tests must cover request, redirect, retry, cancellation, and resource boundaries with URLProtocol", failures)
     require(coordinator_tests.count("func test") >= 3 and "late completion" not in coordinator_tests.lower(),
             "Coordinator tests must cover duplicate, timeout, and generation ownership", failures)
     require(parser_tests.count("func test") >= 4 and '"attribution":1' in parser_tests and

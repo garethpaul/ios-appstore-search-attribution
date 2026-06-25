@@ -4,7 +4,7 @@ Keep this repository a small, privacy-preserving reference for current Apple Ads
 
 Changes should preserve these ownership boundaries:
 
-- `AdServicesAttributionClient` owns token generation, the fixed Apple endpoint, private session configuration, response bounds, strict decoding, and bounded retry policy.
+- `AdServicesAttributionClient` owns token generation, the fixed Apple endpoint, redirect rejection, private session configuration, response bounds, strict decoding, and bounded retry policy.
 - `AttributionRequestCoordinator` owns one active request, timeout, cancellation, generation checks, and terminal state.
 - `ViewController` owns user intent, lifecycle transitions, accessibility, and main-thread rendering only.
 

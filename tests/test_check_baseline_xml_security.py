@@ -41,6 +41,21 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
 
         self.assertIn("python3 -m unittest discover -s tests -p 'test_*.py'", makefile)
 
+    def test_baseline_rejects_removed_redirect_boundary(self) -> None:
+        def remove_redirect_rejection(root: Path) -> None:
+            client = root / "ios-search-ads-sample" / "AttributionClient.swift"
+            source = client.read_text(encoding="utf-8")
+            source = source.replace("        return nil\n", "        return request\n", 1)
+            client.write_text(source, encoding="utf-8")
+
+        result, _, stderr = self.run_baseline_with_storyboard(
+            None,
+            mutate_project=remove_redirect_rejection,
+        )
+
+        self.assertEqual(result, 1, stderr)
+        self.assertIn("Attribution client invariant missing: return nil", stderr)
+
     def test_skips_project_parse_when_xcodebuild_is_unavailable(self) -> None:
         stdout = io.StringIO()
         stderr = io.StringIO()
