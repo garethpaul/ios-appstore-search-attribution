@@ -1,5 +1,39 @@
 # Changes
 
+## 2026-06-25 08:28 PDT - P1 - Keep attribution tokens on Apple's endpoint
+
+### Summary
+Attribution requests now reject every HTTP redirect so URLSession cannot forward the short-lived token to another origin.
+
+### Work completed
+- Added mocked URLProtocol coverage for a `307` redirect to a non-Apple origin.
+- Added a deterministic token-bearing redirect-policy XCTest and delegate-owned rejection.
+- Added portable source contracts, a hostile mutation, and maintained privacy documentation.
+
+### Threads
+- None; work completed directly in this maintenance cycle.
+
+### Files changed
+- `AttributionClient.swift` and native XCTest — redirect ownership and regression coverage.
+- `scripts/`, `tests/`, maintained docs, and `docs/plans/` — portable policy and evidence.
+
+### Validation
+- Portable baseline before implementation — failed because redirect rejection was absent.
+- Root and external-directory portable baseline plus 35 Python tests — passed.
+- Hostile redirect-following mutation — rejected by the portable baseline suite.
+- Full local `make check` — reached the documented native-test boundary and stopped because Xcode is unavailable.
+- First hosted native XCTest — exposed that URLProtocol redirect simulation never completed the task; replaced with a direct policy test.
+- Updated native XCTest — pending hosted macOS/Xcode verification.
+
+### Bugs / findings
+- P1: default URLSession redirect handling could move the attribution POST beyond Apple's fixed endpoint.
+
+### Blockers
+- None; hosted Xcode verification is available on the PR.
+
+### Next action
+- Open the PR for native hosted verification and Codex review, then merge only if both are clean.
+
 ## 2026-06-21
 
 - Made the portable attribution baseline explicitly skip Xcode project parsing

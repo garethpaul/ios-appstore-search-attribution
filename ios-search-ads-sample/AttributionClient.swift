@@ -45,6 +45,12 @@ final class DispatchAttributionScheduler: AttributionScheduling {
 
 extension DispatchWorkItem: AttributionCancellable {}
 
+enum AttributionRedirectPolicy {
+    static func redirectedRequest(_ request: URLRequest) -> URLRequest? {
+        return nil
+    }
+}
+
 enum AttributionResponseParser {
     private struct Payload: Decodable {
         let attribution: Bool
@@ -339,6 +345,17 @@ private final class BoundedDataDelegate: NSObject, URLSessionDataDelegate {
         }
         self.response = httpResponse
         completionHandler(.allow)
+    }
+
+    func urlSession(
+        _: URLSession,
+        task _: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        self.response = response
+        completionHandler(AttributionRedirectPolicy.redirectedRequest(newRequest))
     }
 
     func urlSession(_: URLSession, dataTask: URLSessionDataTask, didReceive newData: Data) {

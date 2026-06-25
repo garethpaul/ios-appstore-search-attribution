@@ -29,6 +29,14 @@ final class AdServicesAttributionClientTests: XCTestCase {
         XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalCacheData)
     }
 
+    func testRedirectPolicyRejectsTokenBearingRequest() {
+        var redirectedRequest = URLRequest(url: URL(string: "https://example.com/collect")!)
+        redirectedRequest.httpMethod = "POST"
+        redirectedRequest.httpBody = Data("private-token".utf8)
+
+        XCTAssertNil(AttributionRedirectPolicy.redirectedRequest(redirectedRequest))
+    }
+
     func testRetriesRetryableStatusesThreeTotalAttemptsThenExhausts() {
         MockURLProtocol.setResponses(Array(repeating: .init(statusCode: 404, contentType: "application/json", body: "{}"), count: 3))
         let scheduler = ImmediateScheduler()

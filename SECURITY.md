@@ -8,6 +8,7 @@ The sample treats the AdServices token and attribution response as sensitive, sh
 - the token and response are not persisted, cached, uploaded elsewhere, or logged;
 - the session is ephemeral with cookies, credential storage, and URL caching disabled;
 - only Apple’s fixed HTTPS endpoint is used;
+- every HTTP redirect is rejected before URLSession can forward the attribution token;
 - request and resource timeouts are bounded;
 - response status, JSON MIME type, 64 KiB size, and strict Boolean schema are validated;
 - only `404` and `500` responses retry, with three total attempts and bounded delays;

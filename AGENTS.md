@@ -41,6 +41,7 @@
 
 - No required secret or credential file was identified in the repository scan. If you add integrations later, keep secrets out of git.
 - Attribution responses can contain sensitive device and campaign context. Keep attribution response handling local-only, user-triggered, and documented.
+- Reject every attribution HTTP redirect so the token stays bound to Apple's fixed endpoint.
 - Keep attribution button state-specific accessibility text aligned with the local-only privacy boundary through the centralized button state helper.
 - Keep attribution completion generation-guarded so stale retry completions
   cannot overwrite active request state.

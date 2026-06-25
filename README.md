@@ -7,6 +7,7 @@ Small iOS sample for explicitly requesting Apple Ads attribution without logging
 - The user taps **Request Attribution**; the app never requests attribution at launch.
 - `AAAttribution.attributionToken()` produces the short-lived token on iOS 14.3 or later.
 - An ephemeral `URLSession` posts that token to `https://api-adservices.apple.com/api/v1/` as `text/plain` and accepts only a `200` JSON response.
+- Every HTTP redirect is rejected so the token is never forwarded beyond Apple's fixed endpoint.
 - The response body is streamed with a 64 KiB limit and decoded with a strict Boolean `attribution` field. Numeric and string lookalikes are rejected.
 - A `404` retries at Apple’s documented five-second interval. A `500` uses bounded 5- then 10-second backoff. Both stop after three total attempts.
 - Tokens and attribution records remain memory-only, are not persisted or cached, and are never printed.
@@ -28,7 +29,7 @@ make build  # unsigned simulator build
 make check  # static checks plus XCTest
 ```
 
-All Make targets derive the repository root, so they can be invoked from another working directory. XCTest covers request construction, strict schema parsing, status/MIME/size rejection, retry exhaustion and backoff, cancellation, timeouts, stale completions, duplicate starts, and main-thread UI state ownership. Tests make no live Apple network calls.
+All Make targets derive the repository root, so they can be invoked from another working directory. XCTest covers request construction, redirect rejection, strict schema parsing, status/MIME/size rejection, retry exhaustion and backoff, cancellation, timeouts, stale completions, duplicate starts, and main-thread UI state ownership. Tests make no live Apple network calls.
 
 On hosts without Xcode, `make lint` runs the portable policy baseline and reports
 the skipped project parse explicitly. Full `make check` still requires Xcode and
