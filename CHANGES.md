@@ -1,5 +1,26 @@
 # Changes
 
+## 2026-06-26 - P1 - Resume only operation-owned attribution tasks
+
+### Summary
+Attribution URLSession tasks now start only after the request operation accepts
+exact ownership, closing a cancellation race that could resume rejected work.
+
+### Work completed
+- Changed task activation into a Boolean ownership handshake.
+- Kept rejected sessions invalidated and returned before `task.resume()`.
+- Added a portable ordering contract, hostile mutation regression, and
+  completed design record.
+
+### Validation
+- Test-first portable baseline reproduced the missing ownership handshake.
+- Focused unconditional-resume mutation was rejected after the fix.
+- Root, external-directory, and hosted canonical checks are required.
+
+### Bugs / findings
+- P1: cancellation could reject a newly created attribution session while the
+  caller still resumed its task without an active operation owner.
+
 ## 2026-06-25 08:28 PDT - P1 - Keep attribution tokens on Apple's endpoint
 
 ### Summary

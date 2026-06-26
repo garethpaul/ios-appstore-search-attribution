@@ -234,6 +234,14 @@ def main() -> int:
             "Server errors must use bounded exponential backoff", failures)
     require("statusCode == 404" in client and "retryDelay" in client,
             "Not-found retries must retain Apple's five-second interval", failures)
+    set_active_start = client.index("    func setActive(")
+    set_active_end = client.index("    func setScheduledRetry", set_active_start)
+    set_active = client[set_active_start:set_active_end]
+    require(") -> Bool {" in set_active and
+            "return false" in set_active and "return true" in set_active and
+            "guard operation.setActive(session: session, task: task, delegate: delegate) else" in client and
+            client.index("guard operation.setActive(session: session, task: task, delegate: delegate) else") < client.index("task.resume()"),
+            "A request task must resume only after its operation accepts exact ownership", failures)
 
     for evidence in [
         "private var generation = 0",

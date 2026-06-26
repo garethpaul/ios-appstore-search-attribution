@@ -56,6 +56,27 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
         self.assertEqual(result, 1, stderr)
         self.assertIn("Attribution client invariant missing: return nil", stderr)
 
+    def test_baseline_rejects_unconditional_request_resume(self) -> None:
+        def remove_activation_guard(root: Path) -> None:
+            client = root / "ios-search-ads-sample" / "AttributionClient.swift"
+            source = client.read_text(encoding="utf-8")
+            source = source.replace(
+                "        guard operation.setActive(session: session, task: task, delegate: delegate) else { return }\n",
+                "        operation.setActive(session: session, task: task, delegate: delegate)\n",
+            )
+            client.write_text(source, encoding="utf-8")
+
+        result, _, stderr = self.run_baseline_with_storyboard(
+            None,
+            mutate_project=remove_activation_guard,
+        )
+
+        self.assertEqual(result, 1, stderr)
+        self.assertIn(
+            "A request task must resume only after its operation accepts exact ownership",
+            stderr,
+        )
+
     def test_skips_project_parse_when_xcodebuild_is_unavailable(self) -> None:
         stdout = io.StringIO()
         stderr = io.StringIO()
