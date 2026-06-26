@@ -12,7 +12,7 @@ Small iOS sample for explicitly requesting Apple Ads attribution without logging
 - A `404` retries at Apple’s documented five-second interval. A `500` uses bounded 5- then 10-second backoff. Both stop after three total attempts.
 - Tokens and attribution records remain memory-only, are not persisted or cached, and are never printed.
 
-The request coordinator owns one active request, a 30-second UI deadline, generation invalidation, duplicate-completion rejection, and lifecycle cancellation. Leaving the screen, backgrounding the app, or timing out cancels active work and prevents late callbacks from changing the UI.
+The request coordinator owns one active request, a 30-second UI deadline, generation invalidation, duplicate-completion rejection, and lifecycle cancellation. A URLSession task starts only after its request operation accepts exact ownership. Leaving the screen, backgrounding the app, or timing out cancels active work and prevents rejected or late callbacks from changing the UI.
 
 ## Requirements
 

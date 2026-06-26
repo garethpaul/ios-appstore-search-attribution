@@ -184,7 +184,7 @@ final class AdServicesAttributionClient: AttributionRequesting {
         }
         let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
         let task = session.dataTask(with: request)
-        operation.setActive(session: session, task: task, delegate: delegate)
+        guard operation.setActive(session: session, task: task, delegate: delegate) else { return }
         task.resume()
     }
 
@@ -243,17 +243,22 @@ private final class RequestOperation: AttributionCancellable {
         self.completion = completion
     }
 
-    func setActive(session: URLSession, task: URLSessionTask, delegate: BoundedDataDelegate) {
+    func setActive(
+        session: URLSession,
+        task: URLSessionTask,
+        delegate: BoundedDataDelegate
+    ) -> Bool {
         lock.lock()
         defer { lock.unlock() }
         guard !isCancelled, completion != nil else {
             session.invalidateAndCancel()
-            return
+            return false
         }
         self.session?.invalidateAndCancel()
         self.session = session
         self.task = task
         self.delegate = delegate
+        return true
     }
 
     func setScheduledRetry(_ retry: AttributionCancellable) {
