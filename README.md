@@ -14,6 +14,8 @@ Small iOS sample for explicitly requesting Apple Ads attribution without logging
 
 The request coordinator owns one active request, a 30-second UI deadline, generation invalidation, duplicate-completion rejection, and lifecycle cancellation. A URLSession task starts only after its request operation accepts exact ownership. Leaving the screen, backgrounding the app, or timing out cancels active work and prevents rejected or late callbacks from changing the UI.
 
+Coordinator startup rejects and cancels timeout or request handles returned after a synchronous terminal callback.
+
 ## Requirements
 
 - Xcode with an available iPhone simulator

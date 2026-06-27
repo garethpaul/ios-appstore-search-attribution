@@ -1,5 +1,40 @@
 # Changes
 
+## 2026-06-27 - P2 - Reject synchronously terminal startup work
+
+### Summary
+The request coordinator now rechecks generation and requesting state after
+timeout scheduling and request construction, cancelling returned handles when a
+synchronous callback has already made that startup terminal.
+
+### Work completed
+- Prevented request startup after a scheduler fires the timeout synchronously.
+- Cancelled request handles returned after synchronous client completion.
+- Added native XCTest cases for both callback orderings.
+- Added portable source contracts and hostile guard-removal mutations.
+- Coordinator startup rejects and cancels timeout or request handles returned after a synchronous terminal callback.
+
+### Validation
+- The new native cases were added first; local execution is unavailable because
+  this host does not provide Xcode.
+- The portable baseline failed before the coordinator ownership guards existed.
+- All 37 Python security and mutation tests pass after implementation.
+- Both timeout-guard and request-guard removal mutations are rejected.
+- Hosted baseline run `28273664039` passed native XCTest and unsigned project
+  validation, while CodeQL run `28273663245` and default code scanning passed
+  on the implementation head before this evidence-only documentation amend.
+- `codex review --base master` was attempted on the implementation head but
+  stopped before analysis because the OpenAI API returned HTTP 401; immutable
+  manual review of the exact diff found no actionable issues.
+
+### Bugs / findings
+- P2: protocol-conforming synchronous schedulers or clients could previously
+  start a request after timeout or leave a terminal request handle uncancelled.
+
+### Next action
+- Re-run the required review attempt and merge only after the replacement
+  evidence-only pull-request head passes hosted checks.
+
 ## 2026-06-26 - P1 - Resume only operation-owned attribution tasks
 
 ### Summary

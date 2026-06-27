@@ -49,6 +49,7 @@
   cancel it before accepted terminal state and reuse the centralized retry path.
 - Resume URLSession tasks only after `RequestOperation` accepts exact session,
   task, and delegate ownership; rejected activation must remain unresumed.
+- Coordinator startup rejects and cancels timeout or request handles returned after a synchronous terminal callback.
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.

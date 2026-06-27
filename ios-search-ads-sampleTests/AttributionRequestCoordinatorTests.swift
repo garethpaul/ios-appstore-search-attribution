@@ -53,6 +53,36 @@ final class AttributionRequestCoordinatorTests: XCTestCase {
         XCTAssertEqual(client.requestCount, 2)
         XCTAssertEqual(states, [.requesting, .idle, .requesting, .completed])
     }
+
+    func testSynchronousTimeoutPreventsRequestStartup() {
+        let client = StubAttributionClient()
+        let coordinator = AttributionRequestCoordinator(
+            client: client,
+            scheduler: SynchronousScheduler(),
+            timeout: 0)
+        var states: [AttributionRequestCoordinator.State] = []
+        coordinator.onStateChange = { states.append($0) }
+
+        coordinator.start()
+
+        XCTAssertEqual(client.requestCount, 0)
+        XCTAssertEqual(states, [.requesting, .failed])
+    }
+
+    func testSynchronousCompletionCancelsReturnedRequestHandle() {
+        let client = SynchronousAttributionClient(result: .success(()))
+        let coordinator = AttributionRequestCoordinator(
+            client: client,
+            scheduler: ManualScheduler(),
+            timeout: 30)
+        var states: [AttributionRequestCoordinator.State] = []
+        coordinator.onStateChange = { states.append($0) }
+
+        coordinator.start()
+
+        XCTAssertTrue(client.cancellable.isCancelled)
+        XCTAssertEqual(states, [.requesting, .completed])
+    }
 }
 
 private final class StubAttributionClient: AttributionRequesting {
@@ -76,6 +106,30 @@ private final class StubAttributionClient: AttributionRequesting {
 private final class TestCancellable: AttributionCancellable {
     private(set) var isCancelled = false
     func cancel() { isCancelled = true }
+}
+
+private final class SynchronousAttributionClient: AttributionRequesting {
+    let cancellable = TestCancellable()
+    private let result: Result<Void, AttributionClientError>
+
+    init(result: Result<Void, AttributionClientError>) {
+        self.result = result
+    }
+
+    @discardableResult
+    func request(completion: @escaping (Result<Void, AttributionClientError>) -> Void) -> AttributionCancellable {
+        completion(result)
+        return cancellable
+    }
+}
+
+private final class SynchronousScheduler: AttributionScheduling {
+    @discardableResult
+    func schedule(after _: TimeInterval, execute: @escaping () -> Void) -> AttributionCancellable {
+        let cancellable = TestCancellable()
+        execute()
+        return cancellable
+    }
 }
 
 private final class ManualScheduler: AttributionScheduling {

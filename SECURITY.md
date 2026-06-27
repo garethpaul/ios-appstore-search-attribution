@@ -14,4 +14,6 @@ The sample treats the AdServices token and attribution response as sensitive, sh
 - only `404` and `500` responses retry, with three total attempts and bounded delays;
 - lifecycle cancellation and request generations reject late or duplicate completions.
 
+Coordinator startup rejects and cancels timeout or request handles returned after a synchronous terminal callback.
+
 Native tests use `URLProtocol` mocks only. They do not generate a real token or contact Apple. A live physical-device test may expose campaign metadata to the app process; never capture that data in screenshots, logs, crash reports, analytics, or issue attachments.

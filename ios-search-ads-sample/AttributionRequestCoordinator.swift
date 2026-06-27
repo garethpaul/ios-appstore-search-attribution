@@ -35,10 +35,16 @@ final class AttributionRequestCoordinator {
         generation += 1
         let requestGeneration = generation
         transition(to: .requesting)
-        timeoutTask = scheduler.schedule(after: timeout) { [weak self] in
+        let scheduledTimeout = scheduler.schedule(after: timeout) { [weak self] in
             self?.finish(generation: requestGeneration, result: .failure(.network))
         }
-        activeRequest = client.request { [weak self] result in
+        guard ownsRequest(generation: requestGeneration) else {
+            scheduledTimeout.cancel()
+            return
+        }
+        timeoutTask = scheduledTimeout
+
+        let request = client.request { [weak self] result in
             if Thread.isMainThread {
                 self?.finish(generation: requestGeneration, result: result)
             } else {
@@ -47,6 +53,11 @@ final class AttributionRequestCoordinator {
                 }
             }
         }
+        guard ownsRequest(generation: requestGeneration) else {
+            request.cancel()
+            return
+        }
+        activeRequest = request
     }
 
     func cancel() {
@@ -75,6 +86,10 @@ final class AttributionRequestCoordinator {
         case .failure:
             transition(to: .failed)
         }
+    }
+
+    private func ownsRequest(generation requestGeneration: Int) -> Bool {
+        return requestGeneration == generation && state == .requesting
     }
 
     private func transition(to newState: State) {
