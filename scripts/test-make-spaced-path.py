@@ -11,9 +11,15 @@ CHILD_MARKER = "IOS_ATTRIBUTION_MAKE_SPACE_CHILD"
 
 
 def run_make(make, arguments, caller, environment):
-    return subprocess.run([make, *arguments], cwd=caller, env=environment,
-                          text=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, timeout=180)
+    return subprocess.run(
+        [make, *arguments],
+        cwd=caller,
+        env=environment,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=180,
+    )
 
 
 def main():
@@ -54,10 +60,42 @@ def main():
         preload_environment = environment.copy()
         preload_environment["MAKEFILES"] = str(extra)
         cases = (
-            (run_make(make, ["-f", repository_makefile, "lint"], caller, preload_environment), "MAKEFILES must be empty"),
-            (run_make(make, ["-f", repository_makefile, "MAKEFILE_LIST=untrusted", "lint"], caller, environment), "MAKEFILE_LIST must not be overridden"),
-            (run_make(make, ["-f", str(extra), "-f", repository_makefile, "lint"], caller, environment), "repository Makefile must be loaded alone"),
-            (run_make(make, ["-f", repository_makefile, "-f", str(extra), "lint"], caller, environment), "repository Makefile must be loaded alone"),
+            (
+                run_make(
+                    make,
+                    ["-f", repository_makefile, "lint"],
+                    caller,
+                    preload_environment,
+                ),
+                "MAKEFILES must be empty",
+            ),
+            (
+                run_make(
+                    make,
+                    ["-f", repository_makefile, "MAKEFILE_LIST=untrusted", "lint"],
+                    caller,
+                    environment,
+                ),
+                "MAKEFILE_LIST must not be overridden",
+            ),
+            (
+                run_make(
+                    make,
+                    ["-f", str(extra), "-f", repository_makefile, "lint"],
+                    caller,
+                    environment,
+                ),
+                "repository Makefile must be loaded alone",
+            ),
+            (
+                run_make(
+                    make,
+                    ["-f", repository_makefile, "-f", str(extra), "lint"],
+                    caller,
+                    environment,
+                ),
+                "repository Makefile must be loaded alone",
+            ),
         )
         for result, message in cases:
             if result.returncode == 0 or message not in result.stderr:

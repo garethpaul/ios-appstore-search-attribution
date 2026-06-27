@@ -6,12 +6,12 @@
   combined root.
 - Replaced it with a validated single-Makefile resolver and regressions for
   preloads, metadata overrides, and extra Makefiles before or after the gate.
+- Preserved absolute Makefile roots containing spaces with a recursive-safe
+  static-baseline regression.
 - Focused authority probes, all 37 Python tests, direct portable validation,
   Python compilation, and diff hygiene pass. Required
   `codex review --base origin/master` was attempted on exact head `f40982a`
   but failed before analysis with OpenAI HTTP 401 authentication errors.
-
-- Preserved absolute Makefile roots containing spaces and added a recursive-safe static-baseline regression.
 
 ## 2026-06-27 - P2 - Reject synchronously terminal startup work
 
