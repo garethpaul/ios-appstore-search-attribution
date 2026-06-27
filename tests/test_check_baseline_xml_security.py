@@ -77,6 +77,43 @@ class CheckBaselineXMLSecurityTests(unittest.TestCase):
             stderr,
         )
 
+    def test_baseline_rejects_removed_synchronous_startup_guards(self) -> None:
+        mutations = [
+            (
+                "        guard ownsRequest(generation: requestGeneration) else {\n"
+                "            scheduledTimeout.cancel()\n"
+                "            return\n"
+                "        }\n",
+                "",
+            ),
+            (
+                "        guard ownsRequest(generation: requestGeneration) else {\n"
+                "            request.cancel()\n"
+                "            return\n"
+                "        }\n",
+                "",
+            ),
+        ]
+
+        for original, replacement in mutations:
+            with self.subTest(original=original):
+                def remove_startup_guard(root: Path) -> None:
+                    coordinator = root / "ios-search-ads-sample" / "AttributionRequestCoordinator.swift"
+                    source = coordinator.read_text(encoding="utf-8")
+                    self.assertIn(original, source)
+                    coordinator.write_text(source.replace(original, replacement, 1), encoding="utf-8")
+
+                result, _, stderr = self.run_baseline_with_storyboard(
+                    None,
+                    mutate_project=remove_startup_guard,
+                )
+
+                self.assertEqual(result, 1, stderr)
+                self.assertIn(
+                    "Coordinator startup must reject synchronously terminal timeout and request handles",
+                    stderr,
+                )
+
     def test_skips_project_parse_when_xcodebuild_is_unavailable(self) -> None:
         stdout = io.StringIO()
         stderr = io.StringIO()

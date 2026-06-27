@@ -138,6 +138,7 @@ def main() -> int:
         "ios-search-ads-sampleTests/AttributionRequestCoordinatorTests.swift",
         "ios-search-ads-sampleTests/AttributionResponseParserTests.swift",
         "docs/plans/2026-06-25-attribution-redirect-rejection.md",
+        "docs/plans/2026-06-27-synchronous-startup-ownership.md",
         "scripts/select-simulator.py",
         "scripts/run-xcode-tests.sh",
         "tests/test_check_baseline_xml_security.py",
@@ -203,6 +204,13 @@ def main() -> int:
             "Attribution token and response data must not be persisted or logged", failures)
     require("ADClient" not in view_controller + client + coordinator and "import iAd" not in view_controller,
             "Runtime source must not use retired iAd attribution", failures)
+    require("let scheduledTimeout = scheduler.schedule(after: timeout)" in coordinator and
+            "guard ownsRequest(generation: requestGeneration) else {" in coordinator and
+            "scheduledTimeout.cancel()" in coordinator and
+            "let request = client.request" in coordinator and
+            "request.cancel()" in coordinator and
+            coordinator.count("guard ownsRequest(generation: requestGeneration) else {") == 2,
+            "Coordinator startup must reject synchronously terminal timeout and request handles", failures)
 
     for evidence in [
         'URL(string: "https://api-adservices.apple.com/api/v1/")',
@@ -256,8 +264,11 @@ def main() -> int:
     require(network_tests.count("func test") >= 7 and "MockURLProtocol" in network_tests and
             "testRedirectPolicyRejectsTokenBearingRequest" in network_tests,
             "Network tests must cover request, redirect, retry, cancellation, and resource boundaries with URLProtocol", failures)
-    require(coordinator_tests.count("func test") >= 3 and "late completion" not in coordinator_tests.lower(),
-            "Coordinator tests must cover duplicate, timeout, and generation ownership", failures)
+    require(coordinator_tests.count("func test") >= 5 and
+            "testSynchronousTimeoutPreventsRequestStartup" in coordinator_tests and
+            "testSynchronousCompletionCancelsReturnedRequestHandle" in coordinator_tests and
+            "late completion" not in coordinator_tests.lower(),
+            "Coordinator tests must cover duplicate, timeout, generation, and synchronous startup ownership", failures)
     require(parser_tests.count("func test") >= 4 and '"attribution":1' in parser_tests and
             '"attribution":"true"' in parser_tests,
             "Parser tests must reject non-Boolean attribution lookalikes", failures)
@@ -277,6 +288,11 @@ def main() -> int:
     require("AdServices" in documentation and "64 KiB" in documentation and
             "three total attempts" in documentation and "not persisted" in documentation.lower(),
             "Documentation must describe current API, bounds, retry exhaustion, and no persistence", failures)
+    synchronous_startup_guidance = (
+        "Coordinator startup rejects and cancels timeout or request handles returned after a synchronous terminal callback."
+    )
+    require(documentation.count(synchronous_startup_guidance) == 3,
+            "Maintained documentation must preserve synchronous startup ownership guidance", failures)
 
     xcodebuild = shutil.which("xcodebuild")
     if xcodebuild is None:
