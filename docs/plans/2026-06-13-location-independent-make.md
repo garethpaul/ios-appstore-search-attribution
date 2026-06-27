@@ -10,7 +10,7 @@ deriving the checkout root.
 
 ## Scope
 
-1. Derive the checkout root from an encoded `MAKEFILE_LIST` that preserves spaces.
+1. Derive the checkout root from one quoted, validated `MAKEFILE_LIST` path.
 2. Invoke the Python checker through its rooted path.
 3. Add completed-plan, external-run, recursive spaced-path, guidance, and mutation contracts.
 4. Preserve attribution behavior, Swift source, tests, project, and workflow files.
@@ -34,6 +34,7 @@ deriving the checkout root.
 
 - Root and external-directory Make gates passed for all four aliases.
 - GNU Make 4.2 and 4.4 space-containing absolute Makefile paths passed.
+- Preloaded, overridden, and multiple Makefile authority cases fail closed.
 - The root-derivation mutation failed.
 - The checker-invocation mutation failed.
 - The plan-status mutation failed.

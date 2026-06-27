@@ -275,9 +275,10 @@ def main() -> int:
             "Parser tests must reject non-Boolean attribution lookalikes", failures)
 
     location_plan = read("docs/plans/2026-06-13-location-independent-make.md")
-    require("override makefile_space := __IOS_ATTRIBUTION_MAKEFILE_SPACE__" in makefile and
-            "$(subst $(space),$(makefile_space),$(MAKEFILE_LIST))" in makefile and
-            "$(subst $(makefile_space),$(space),$(dir $(abspath $(lastword $(encoded_makefile_list)))))" in makefile and
+    require("MAKEFILES must be empty" in makefile and
+            "MAKEFILE_LIST must not be overridden" in makefile and
+            "repository Makefile must be loaded alone" in makefile and
+            "$(value MAKEFILE_LIST)" in makefile and
             'cd "$(MAKEFILE_ROOT)"' in makefile and
             "python3 -m unittest discover -s tests -p 'test_*.py'" in makefile and
             "scripts/run-xcode-tests.sh" in makefile and

@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-26 19:35 PDT — P1 Make root authority
+
+- Reproduced the sentinel parser collapsing a `MAKEFILES` preload into a false
+  combined root.
+- Replaced it with a validated single-Makefile resolver and regressions for
+  preloads, metadata overrides, and extra Makefiles before or after the gate.
+
 - Preserved absolute Makefile roots containing spaces and added a recursive-safe static-baseline regression.
 
 ## 2026-06-27 - P2 - Reject synchronously terminal startup work

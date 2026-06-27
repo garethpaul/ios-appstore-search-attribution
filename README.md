@@ -31,9 +31,10 @@ make build  # unsigned simulator build
 make check  # static checks plus XCTest
 ```
 
-All Make targets derive the repository root, so an absolute Makefile path can be
-invoked from another working directory, including checkout paths containing
-spaces. XCTest covers request construction, redirect rejection, strict schema
+All Make targets derive the repository root from exactly one loaded Makefile,
+so an absolute Makefile path can be invoked from another working directory,
+including checkout paths containing spaces. Preloaded or multiple Makefiles
+fail closed. XCTest covers request construction, redirect rejection, strict schema
 parsing, status/MIME/size rejection, retry exhaustion and backoff,
 cancellation, timeouts, stale completions, duplicate starts, and main-thread UI
 state ownership. Tests make no live Apple network calls.
