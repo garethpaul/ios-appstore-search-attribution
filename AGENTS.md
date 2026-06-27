@@ -16,6 +16,7 @@
 
 - Install dependencies: no repository-specific install command is documented.
 - Full baseline: `make check`
+- Make gates support absolute checkout paths containing spaces; preserve the encoded `MAKEFILE_LIST` root derivation and recursive static regression.
 - Local Apple development: `open ios-search-ads-sample.xcodeproj`
 - If a command above skips because a platform toolchain is missing, verify on a machine with that SDK before claiming platform behavior is tested.
 

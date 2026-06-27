@@ -1,5 +1,7 @@
 # Changes
 
+- Preserved absolute Makefile roots containing spaces and added a recursive-safe static-baseline regression.
+
 ## 2026-06-27 - P2 - Reject synchronously terminal startup work
 
 ### Summary
