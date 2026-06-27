@@ -141,6 +141,7 @@ def main() -> int:
         "docs/plans/2026-06-27-synchronous-startup-ownership.md",
         "scripts/select-simulator.py",
         "scripts/run-xcode-tests.sh",
+        "scripts/test-make-spaced-path.py",
         "tests/test_check_baseline_xml_security.py",
         "tests/test_simulator_selection.py",
     ]
@@ -273,11 +274,29 @@ def main() -> int:
             '"attribution":"true"' in parser_tests,
             "Parser tests must reject non-Boolean attribution lookalikes", failures)
 
-    require("override MAKEFILE_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))" in makefile and
+    location_plan = read("docs/plans/2026-06-13-location-independent-make.md")
+    require("MAKEFILES must be empty" in makefile and
+            "MAKEFILE_LIST must not be overridden" in makefile and
+            "repository Makefile must be loaded alone" in makefile and
+            "$(value MAKEFILE_LIST)" in makefile and
             'cd "$(MAKEFILE_ROOT)"' in makefile and
             "python3 -m unittest discover -s tests -p 'test_*.py'" in makefile and
-            "scripts/run-xcode-tests.sh" in makefile,
-            "Make targets must derive the checkout root and run Python security tests plus native XCTest", failures)
+            "scripts/run-xcode-tests.sh" in makefile and
+            "python3 scripts/test-make-spaced-path.py" in makefile,
+            "Make targets must preserve spaces while deriving and testing the checkout root", failures)
+    normalized_readme = " ".join(read("README.md").split())
+    normalized_agents = " ".join(read("AGENTS.md").split())
+    normalized_changes = " ".join(read("CHANGES.md").split())
+    require("paths containing spaces" in normalized_readme and
+            "absolute checkout paths containing spaces" in normalized_agents and
+            "roots containing spaces" in normalized_changes,
+            "operator guidance must document space-safe Make verification", failures)
+    location_sections = location_plan.split("## Verification Completed\n", 1)
+    require(re.findall(r"^status: .+$", location_plan, flags=re.MULTILINE) == ["status: completed"] and
+            len(location_sections) == 2 and
+            "space-containing absolute Makefile paths passed" in location_sections[1] and
+            re.search(r"\b(?:pending|todo|tbd|not run)\b", location_sections[1], re.IGNORECASE) is None,
+            "location-independent Make plan must record completed spaced-path verification", failures)
     require('xcrun simctl list devices available -j | python3 -I "$ROOT/scripts/select-simulator.py"'
             in xcode_test_runner,
             "Simulator selection must use the isolated helper", failures)
